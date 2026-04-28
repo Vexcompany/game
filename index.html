@@ -5,29 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ksatria Kata Pagaska</title>
   <style>
-    body { margin: 0; background: #1a2a1a; font-family: sans-serif; overflow: hidden; }
-    #game { width: 100%; height: 100vh; position: relative; background: url('https://i.imgur.com/3J3wZ3E.png') center/cover; }
-    #maskot { position: absolute; bottom: 20px; left: 20px; width: 120px; cursor: pointer; }
-    #bubble { position: absolute; bottom: 160px; left: 40px; background: #fff; padding: 12px 16px; 
-             border-radius: 16px; max-width: 250px; box-shadow: 0 4px 12px #0005; display: none;
-             animation: pop 0.3s ease; }
-    #bubble:after { content: ''; position: absolute; bottom: -10px; left: 30px; border: 10px solid transparent; border-top-color: #fff; }
-    @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
-    #main { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: #0008; padding: 20px; border-radius: 12px; color: #fff; text-align: center; display: none; }
-    input, button { padding: 10px; margin: 5px; border-radius: 8px; border: none; }
-    button { background: #c00; color: #fff; font-weight: bold; cursor: pointer; }
+    body { margin: 0; background: #0a0a0a; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+    #game {
+      width: 100%; height: 100vh; position: relative;
+      background: linear-gradient(180deg, #c00 0%, #c00 48%, #fff 48%, #fff 100%);
+    }
+    #maskot {
+      position: absolute; bottom: 10px; left: 10px; width: 140px;
+      cursor: pointer; transition: transform 0.2s; filter: drop-shadow(0 4px 8px #0008);
+    }
+    #maskot:hover { transform: scale(1.05) rotate(-2deg); }
+    #bubble {
+      position: absolute; bottom: 170px; left: 30px; background: #fff;
+      padding: 14px 18px; border-radius: 18px; max-width: 280px;
+      box-shadow: 0 4px 16px #0004; display: none; font-weight: 500;
+      animation: pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    #bubble:after {
+      content: ''; position: absolute; bottom: -12px; left: 35px;
+      border: 12px solid transparent; border-top-color: #fff;
+    }
+    @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    #main {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: #000c; backdrop-filter: blur(8px); padding: 24px; border-radius: 16px;
+      color: #fff; text-align: center; display: none; border: 2px solid #fff3; width: 90%; max-width: 400px;
+    }
+    #level { position: absolute; top: 20px; right: 20px; background: #fff;
+             padding: 8px 16px; border-radius: 20px; font-weight: bold; color: #c00; }
+    input { padding: 12px; margin: 10px 0; border-radius: 10px; border: none; width: 90%; }
+    button {
+      background: #c00; color: #fff; font-weight: bold; cursor: pointer;
+      padding: 12px 24px; border: none; border-radius: 10px; margin-top: 8px;
+      transition: 0.2s;
+    }
+    button:hover { background: #a00; transform: scale(1.05); }
+    #result { margin-top: 16px; font-weight: bold; min-height: 40px; }
   </style>
 </head>
 <body>
   <div id="game">
-    <img id="maskot" src="https://i.imgur.com/8p3dN3g.png" alt="Kak Taksaka">
+    <div id="level">LEVEL 1</div>
+    <!-- Ganti src ini pake file yang udah kamu download -->
+    <img id="maskot" src="/maskot-indo.png" alt="Kak Taksaka">
     <div id="bubble"></div>
-    
+
     <div id="main">
-      <h2 id="mission">Loading misi...</h2>
-      <input id="answer" placeholder="Tulis yel-yel kamu di sini" style="width: 300px;">
-      <br><button onclick="submit()">KIRIM!</button>
+      <h2 id="mission">Kak Taksaka lagi nyiapin misi...</h2>
+      <input id="answer" placeholder="Tulis yel-yel kreatif kamu di sini">
+      <br><button onclick="submit()">LAPORKAN, KAK!</button>
       <p id="result"></p>
     </div>
   </div>
@@ -36,40 +62,58 @@
 const bubble = document.getElementById('bubble');
 const maskot = document.getElementById('maskot');
 const main = document.getElementById('main');
-let currentKeyword = '';
+let currentKeyword = '', level = 1;
 
-async function showBubble(text) {
+function showBubble(text) {
   bubble.innerText = text;
   bubble.style.display = 'block';
+  setTimeout(() => bubble.style.animation = 'none', 300);
+}
+
+async function fetchAPI(params) {
+  const res = await fetch(`/api/game?${params}`);
+  return res.json();
 }
 
 async function init() {
-  // 1. Welcome dari Kak Taksaka
-  const w = await fetch('/api/game?action=welcome').then(r => r.json());
+  const w = await fetchAPI('action=welcome');
   showBubble(w.text);
-  
-  // 2. Kalau bubble diklik, ilang + mulai game
+
   bubble.onclick = async () => {
     bubble.style.display = 'none';
     main.style.display = 'block';
-    const m = await fetch('/api/game?action=mission').then(r => r.json());
-    document.getElementById('mission').innerText = m.mission;
-    currentKeyword = m.keyword;
+    loadMission();
   }
+}
+
+async function loadMission() {
+  document.getElementById('mission').innerText = 'Kak Taksaka lagi mikir...';
+  document.getElementById('answer').value = '';
+  document.getElementById('result').innerText = '';
+  const m = await fetchAPI('action=mission&level=' + level);
+  document.getElementById('mission').innerText = m.mission;
+  currentKeyword = m.keyword;
+  document.getElementById('level').innerText = `LEVEL ${level}`;
 }
 
 async function submit() {
   const answer = document.getElementById('answer').value;
-  if(!answer) return;
-  document.getElementById('result').innerText = 'Kak Taksaka lagi nilai...';
-  const j = await fetch(`/api/game?action=judge&answer=${encodeURIComponent(answer)}`).then(r => r.json());
+  if(!answer) return showBubble('Isi dulu dong yel-yelnya!');
+  document.getElementById('result').innerText = 'Dinilai Kak Taksaka...';
+  const j = await fetchAPI(`action=judge&answer=${encodeURIComponent(answer)}&level=${level}`);
   document.getElementById('result').innerText = j.result;
-  
-  // Maskot kasih reaksi
-  showBubble(j.result.includes('SKOR: 8') || j.result.includes('SKOR: 9') ? 'Keren! Lanjut misi berikutnya!' : 'Tetap semangat! Coba lagi ya!');
+
+  // Naik level kalo skor >= 75
+  if(j.result.includes('SKOR: 7') || j.result.includes('SKOR: 8') || j.result.includes('SKOR: 9') || j.result.includes('SKOR: 100')) {
+    level++;
+    showBubble('Bagus! Kamu naik level! Siap misi berikutnya?');
+    setTimeout(loadMission, 2000);
+  } else {
+    showBubble('Coba lagi ya! Semangat 45!');
+  }
 }
 
-maskot.onclick = () => showBubble('Siap bantu! Klik gelembung kalo mau mulai misi.');
+maskot.onclick = () => showBubble('Siap, Ksatria! Klik gelembungku kalo mau mulai.');
 init();
 </script>
 </body>
