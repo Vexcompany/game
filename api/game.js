@@ -1,49 +1,54 @@
+export const config = { runtime: 'edge' }; // Pake edge biar cepet
+
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 async function gemini(text) {
-  if (!GEMINI_KEY) return 'Error kak, API Key belum dipasang di Vercel. Merdeka!';
+  if (!GEMINI_KEY) return 'Error kak, API Key kosong. Cek Vercel Env Variables!';
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         contents: [{ parts: [{ text }] }],
-        generationConfig: { temperature: 0.9 }
+        generationConfig: { temperature: 0.9, maxOutputTokens: 100 }
       })
     });
-    if (!res.ok) return 'Error kak, Kak Taksaka lagi istirahat';
+    if (!res.ok) {
+        const err = await res.text();
+        return `Error kak, Gemini nolak: ${res.status} ${err}`;
+    }
     const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Error kak, jaringan lelet';
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Error kak, jawaban Gemini kosong';
   } catch (e) {
-    return 'Error kak, server kena mental';
+    return `Error kak, server crash: ${e.message}`;
   }
 }
 
-module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  const { action, answer, level = 1 } = req.query;
+export default async function handler(req) {
+  const { searchParams } = new URL(req.url);
+  const action = searchParams.get('action');
+  const answer = searchParams.get('answer');
+  const level = searchParams.get('level') || 1;
+
+  const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
 
   if (action === 'welcome') {
-    const text = await gemini('Kamu Kak Taksaka, maskot naga Paskibra SMKN 5. Sapa user baru 1 kalimat semangat, gaya villager COC, akhiri dengan "Merdeka!". Pake bahasa gaul anak Paskibra.');
-    return res.status(200).json({ text });
+    const text = await gemini('Kamu Kak Taksaka, maskot naga Paskibra SMKN 5. Sapa user baru 1 kalimat semangat, gaya villager COC, akhiri dengan "Merdeka!".');
+    return new Response(JSON.stringify({ text }), { headers });
   }
 
   if (action === 'mission') {
-    const kataLvl = {
-      1: ['Merdeka', 'Disiplin', 'Tangguh'],
-      2: ['Pantang Menyerah', 'Gagah Berani', 'Satu Komando'],
-      3: ['Jiwa Korsa', 'Loyalty', 'Dedikasi Tanpa Batas']
-    };
-    const list = kataLvl[Math.min(level, 3)];
+    const kataLvl = { 1: ['Merdeka', 'Disiplin'], 2: ['Pantang Menyerah', 'Gagah Berani'] };
+    const list = kataLvl[Math.min(level, 2)];
     const random = list[Math.floor(Math.random() * list.length)];
-    const text = await gemini(`Level ${level}. Buat misi: suruh buat yel-yel Paskibra pake kata "${random}". 1 kalimat aja, gaya tegas tapi asik.`);
-    return res.status(200).json({ mission: text, keyword: random });
+    const text = await gemini(`Level ${level}. Buat misi: suruh buat yel-yel Paskibra pake kata "${random}". 1 kalimat aja.`);
+    return new Response(JSON.stringify({ mission: text, keyword: random }), { headers });
   }
 
   if (action === 'judge') {
-    const text = await gemini(`Level ${level}. User jawab: "${answer}". Nilailah yel-yel ini dari 1-100. Kasih komentar 1 kalimat gaya kakak pembina Paskibra galak tapi sayang. Format: SKOR: xx | KOMEN: xxx`);
-    return res.status(200).json({ result: text });
+    const text = await gemini(`Level ${level}. User jawab: "${answer}". Nilai 1-100. Komentar 1 kalimat gaya pembina Paskibra. Format: SKOR: xx | KOMEN: xxx`);
+    return new Response(JSON.stringify({ result: text }), { headers });
   }
 
-  res.status(400).json({ error: 'action salah, Ksatria!' });
+  return new Response(JSON.stringify({ error: 'action salah' }), { headers, status: 400 });
 }
