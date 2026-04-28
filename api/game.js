@@ -1,11 +1,12 @@
-export const config = { runtime: 'edge' }; // Pake edge biar cepet
+export const config = { runtime: 'edge' };
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 async function gemini(text) {
-  if (!GEMINI_KEY) return 'Error kak, API Key kosong. Cek Vercel Env Variables!';
+  if (!GEMINI_KEY) return 'Error kak, API Key kosong. Cek Vercel Env!';
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+    // INI YANG BENER VEX - v1 + flash-latest
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
