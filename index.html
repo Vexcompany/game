@@ -128,14 +128,20 @@ async function submit() {
   document.getElementById('result').innerText = 'Dinilai Kak Taksaka...';
 
   const j = await fetchAPI(`action=judge&answer=${encodeURIComponent(answer)}&level=${level}`);
-  if(j.error) {
-    document.getElementById('result').innerText = 'Error: ' + j.error;
-    btnLapor.disabled = false;
-    return;
-  }
+  const hasil = j.result || 'Error: Gagal nilai';
+  
+  let skor = 0;
+  let komen = hasil;
 
-  const skor = j.skor || 0;
-  const komen = j.komen || 'Coba lagi';
+  const skorMatch = hasil.match(/SKOR\s*:\s*(\d+)/i);
+  if(skorMatch) {
+    skor = parseInt(skorMatch[1]);
+    komen = hasil.split(/KOMEN\s*:\s*/i)[1] || 'Kerja bagus!';
+  } else {
+    const angkaMatch = hasil.match(/\d+/);
+    if(angkaMatch) skor = parseInt(angkaMatch[0]);
+    komen = hasil.replace(/skor\s*:?\s*\d+/i, '').trim();
+  }
 
   document.getElementById('result').innerHTML = `<b>SKOR: ${skor}</b><br>${komen}`;
 
@@ -146,14 +152,6 @@ async function submit() {
   } else {
     showBubble(`Skor ${skor}. Coba lagi ya! Semangat 45!`);
     btnLapor.disabled = false;
-  }
-}
-
-document.getElementById('level').onclick = () => {
-  if(confirm('Mau ulang dari Level 1?')) {
-    level = 1;
-    loadMission();
-    showBubble('Siap! Mulai dari awal. Merdeka!');
   }
 }
 
