@@ -1,5 +1,4 @@
 export const config = { runtime: 'edge' };
-
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 async function gemini(text) {
@@ -10,7 +9,7 @@ async function gemini(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text }] }],
-        generationConfig: { temperature: 0.8, maxOutputTokens: 200 } // NAIKIN JADI 200
+        generationConfig: { temperature: 0.5, maxOutputTokens: 200 }
       })
     });
     if (!res.ok) {
@@ -32,23 +31,30 @@ export default async function handler(req) {
 
   const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
 
-  if (action === 'welcome') {
-  const text = await gemini('Kamu Kak Taksaka maskot Paskibra SMKN 5. Sapa user 1 kalimat semangat maksimal 15 kata, akhiri "Merdeka!".');
-  return new Response(JSON.stringify({ text }), { headers });
-}
+  // SAPAAN TAHAP 1
+  if (action === 'welcome1') {
+    const text = await gemini('Kamu Kak Taksaka naga Paskibra. Sapa user baru 1 kalimat. Sebut "Ksatria", tanya "Siap jadi legenda Pagaska?". Maksimal 15 kata.');
+    return new Response(JSON.stringify({ text }), { headers });
+  }
 
-if (action === 'mission') {
-  const kataLvl = { 1: ['Merdeka', 'Disiplin'], 2: ['Pantang Menyerah', 'Gagah Berani'], 3: ['Jiwa Korsa'] };
-  const list = kataLvl[Math.min(level, 3)];
-  const random = list[Math.floor(Math.random() * list.length)];
-  const text = await gemini(`Buat misi 1 kalimat maksimal 15 kata: suruh buat yel-yel Paskibra pake kata "${random}".`);
-  return new Response(JSON.stringify({ mission: text, keyword: random }), { headers });
-}
+  // SAPAAN TAHAP 2
+  if (action === 'welcome2') {
+    const text = await gemini('Kamu Kak Taksaka. Lanjutkan sapaan. 1 kalimat: Kasih tau ada 3 misi rahasia di website ini buat rehatkan pikiran. Gaya komandan. Maksimal 18 kata.');
+    return new Response(JSON.stringify({ text }), { headers });
+  }
 
-if (action === 'judge') {
-  const text = await gemini(`User jawab yel-yel: "${answer}". Nilailah 0-100. Balas PERSIS format: SKOR: [angka] | KOMEN: [komentar maksimal 12 kata gaya pembina Paskibra]. Jangan tambah teks lain.`);
-  return new Response(JSON.stringify({ result: text }), { headers });
-}
+  if (action === 'mission') {
+    const kataLvl = { 1: ['Merdeka', 'Disiplin'], 2: ['Pantang Menyerah', 'Gagah Berani'], 3: ['Jiwa Korsa'] };
+    const list = kataLvl[Math.min(level, 3)];
+    const random = list[Math.floor(Math.random() * list.length)];
+    const text = await gemini(`Misi Level ${level}. Buat 1 kalimat: suruh buat yel-yel Paskibra pake kata "${random}". Gaya menantang.`);
+    return new Response(JSON.stringify({ mission: text, keyword: random }), { headers });
+  }
+
+  if (action === 'judge') {
+    const text = await gemini(`User jawab yel-yel: "${answer}". Nilailah 0-100. Balas PERSIS: SKOR: [angka] | KOMEN: [komentar 1 kalimat gaya pembina galak].`);
+    return new Response(JSON.stringify({ result: text }), { headers });
+  }
 
   return new Response(JSON.stringify({ error: 'action salah' }), { headers, status: 400 });
 }
