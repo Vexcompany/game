@@ -75,10 +75,12 @@ const maskot = document.getElementById('maskot');
 const main = document.getElementById('main');
 const btnLapor = document.getElementById('btnLapor');
 let currentKeyword = '', level = 1;
+let welcomeStep = 0; // 0=belum, 1=udah sapa1, 2=udah sapa2
 
 function showBubble(text) {
   bubble.innerText = text;
   bubble.style.display = 'block';
+  bubble.style.animation = 'pop 0.3s';
   setTimeout(() => bubble.style.animation = 'none', 300);
 }
 
@@ -92,14 +94,30 @@ async function fetchAPI(params) {
 }
 
 async function init() {
-  const w = await fetchAPI('action=welcome');
-  if(w.error) return showBubble('Kak Taksaka lagi error: ' + w.error);
-  showBubble(w.text || 'Siap Ksatria! Merdeka!');
+  maskot.onclick = async () => {
+    if (welcomeStep === 0) {
+      // TAHAP 1: Sapaan pertama
+      const w1 = await fetchAPI('action=welcome1');
+      if(w1.error) return showBubble('Kak Taksaka error: ' + w1.error);
+      showBubble(w1.text);
+      welcomeStep = 1;
+    }
+  }
 
-  bubble.onclick = () => {
-    bubble.style.display = 'none';
-    main.style.display = 'block';
-    loadMission();
+  bubble.onclick = async () => {
+    if (welcomeStep === 1) {
+      // TAHAP 2: Lanjut sapaan kedua
+      const w2 = await fetchAPI('action=welcome2');
+      if(w2.error) return showBubble('Kak Taksaka error: ' + w2.error);
+      showBubble(w2.text);
+      welcomeStep = 2;
+    } else if (welcomeStep === 2) {
+      // TAHAP 3: Masuk game
+      bubble.style.display = 'none';
+      main.style.display = 'block';
+      loadMission();
+      welcomeStep = 3;
+    }
   }
 }
 
@@ -129,10 +147,9 @@ async function submit() {
 
   const j = await fetchAPI(`action=judge&answer=${encodeURIComponent(answer)}&level=${level}`);
   const hasil = j.result || 'Error: Gagal nilai';
-  
+
   let skor = 0;
   let komen = hasil;
-
   const skorMatch = hasil.match(/SKOR\s*:\s*(\d+)/i);
   if(skorMatch) {
     skor = parseInt(skorMatch[1]);
@@ -155,7 +172,14 @@ async function submit() {
   }
 }
 
-maskot.onclick = () => showBubble('Siap, Ksatria! Klik gelembungku kalo mau mulai.');
+document.getElementById('level').onclick = () => {
+  if(confirm('Mau ulang dari Level 1?')) {
+    level = 1;
+    loadMission();
+    showBubble('Siap! Mulai dari awal. Merdeka!');
+  }
+}
+
 init();
 </script>
 </body>
