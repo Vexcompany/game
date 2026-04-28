@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ksatria Kata Pagaska</title>
+  <style>
+    body { margin: 0; background: #1a2a1a; font-family: sans-serif; overflow: hidden; }
+    #game { width: 100%; height: 100vh; position: relative; background: url('https://i.imgur.com/3J3wZ3E.png') center/cover; }
+    #maskot { position: absolute; bottom: 20px; left: 20px; width: 120px; cursor: pointer; }
+    #bubble { position: absolute; bottom: 160px; left: 40px; background: #fff; padding: 12px 16px; 
+             border-radius: 16px; max-width: 250px; box-shadow: 0 4px 12px #0005; display: none;
+             animation: pop 0.3s ease; }
+    #bubble:after { content: ''; position: absolute; bottom: -10px; left: 30px; border: 10px solid transparent; border-top-color: #fff; }
+    @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+    #main { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #0008; padding: 20px; border-radius: 12px; color: #fff; text-align: center; display: none; }
+    input, button { padding: 10px; margin: 5px; border-radius: 8px; border: none; }
+    button { background: #c00; color: #fff; font-weight: bold; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <img id="maskot" src="https://i.imgur.com/8p3dN3g.png" alt="Kak Taksaka">
+    <div id="bubble"></div>
+    
+    <div id="main">
+      <h2 id="mission">Loading misi...</h2>
+      <input id="answer" placeholder="Tulis yel-yel kamu di sini" style="width: 300px;">
+      <br><button onclick="submit()">KIRIM!</button>
+      <p id="result"></p>
+    </div>
+  </div>
+
+<script>
+const bubble = document.getElementById('bubble');
+const maskot = document.getElementById('maskot');
+const main = document.getElementById('main');
+let currentKeyword = '';
+
+async function showBubble(text) {
+  bubble.innerText = text;
+  bubble.style.display = 'block';
+}
+
+async function init() {
+  // 1. Welcome dari Kak Taksaka
+  const w = await fetch('/api/game?action=welcome').then(r => r.json());
+  showBubble(w.text);
+  
+  // 2. Kalau bubble diklik, ilang + mulai game
+  bubble.onclick = async () => {
+    bubble.style.display = 'none';
+    main.style.display = 'block';
+    const m = await fetch('/api/game?action=mission').then(r => r.json());
+    document.getElementById('mission').innerText = m.mission;
+    currentKeyword = m.keyword;
+  }
+}
+
+async function submit() {
+  const answer = document.getElementById('answer').value;
+  if(!answer) return;
+  document.getElementById('result').innerText = 'Kak Taksaka lagi nilai...';
+  const j = await fetch(`/api/game?action=judge&answer=${encodeURIComponent(answer)}`).then(r => r.json());
+  document.getElementById('result').innerText = j.result;
+  
+  // Maskot kasih reaksi
+  showBubble(j.result.includes('SKOR: 8') || j.result.includes('SKOR: 9') ? 'Keren! Lanjut misi berikutnya!' : 'Tetap semangat! Coba lagi ya!');
+}
+
+maskot.onclick = () => showBubble('Siap bantu! Klik gelembung kalo mau mulai misi.');
+init();
+</script>
+</body>
+</html>
