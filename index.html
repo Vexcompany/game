@@ -2,70 +2,69 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Ksatria Kata Pagaska</title>
   <style>
-    * { box-sizing: border-box; }
-body { margin: 0; background: #0a0a0a; font-family: 'Segoe UI', sans-serif; }
-#game {
-  width: 100%; min-height: 100vh; position: relative;
-  background: linear-gradient(180deg, #c00 0%, #c00 48%, #fff 48%, #fff 100%);
-  padding: 20px 16px 160px 16px; /* bawah kasih space buat maskot */
-  display: flex; justify-content: center; align-items: center;
-}
-#maskot {
-  position: fixed; bottom: 10px; left: 10px; width: 120px;
-  cursor: pointer; transition: transform 0.2s; filter: drop-shadow(0 4px 8px #0008);
-  z-index: 10;
-}
-#maskot:active { transform: scale(0.95); }
-#bubble {
-  position: fixed; bottom: 140px; left: 20px; background: #fff;
-  padding: 12px 16px; border-radius: 16px; max-width: 70vw;
-  box-shadow: 0 4px 16px #0004; display: none; font-weight: 500;
-  animation: pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  z-index: 11;
-}
-#bubble:after {
-  content: ''; position: absolute; bottom: -10px; left: 30px;
-  border: 10px solid transparent; border-top-color: #fff;
-}
-@keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-#main {
-  background: #000d; backdrop-filter: blur(8px); padding: 20px; border-radius: 16px;
-  color: #fff; text-align: center; display: none; border: 2px solid #fff3;
-  width: 100%; max-width: 400px; z-index: 5;
-}
-#level {
-  position: fixed; top: 16px; right: 16px; background: #fff;
-  padding: 8px 16px; border-radius: 20px; font-weight: bold; color: #c00;
-  z-index: 10; box-shadow: 0 2px 8px #0003;
-}
-input {
-  padding: 14px; margin: 12px 0; border-radius: 12px; border: none; width: 100%;
-  font-size: 16px; /* biar ga ke-zoom di iPhone */
-}
-button {
-  background: #c00; color: #fff; font-weight: bold; cursor: pointer;
-  padding: 14px 24px; border: none; border-radius: 12px; margin-top: 8px;
-  transition: 0.2s; width: 100%; font-size: 16px;
-}
-button:active { background: #a00; transform: scale(0.98); }
-#result { margin-top: 16px; font-weight: bold; min-height: 60px; line-height: 1.4; }
-h2 { font-size: 18px; margin: 0 0 8px 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; font-family: 'Segoe UI', sans-serif; }
+    #game {
+      width: 100%; min-height: 100dvh; position: relative;
+      background: linear-gradient(180deg, #c00 0%, #c00 50%, #fff 50%, #fff 100%);
+      padding: 80px 16px 160px 16px;
+      display: flex; justify-content: center; align-items: flex-start;
+    }
+    #level {
+      position: fixed; top: 16px; right: 16px; background: #fff;
+      padding: 8px 16px; border-radius: 20px; font-weight: bold; color: #c00;
+      z-index: 10; box-shadow: 0 2px 8px #0003; cursor: pointer;
+    }
+    #maskot {
+      position: fixed; bottom: 10px; left: 10px; width: 110px;
+      cursor: pointer; transition: transform 0.2s; filter: drop-shadow(0 4px 8px #0008);
+      z-index: 10;
+    }
+    #maskot:active { transform: scale(0.95); }
+    #bubble {
+      position: fixed; bottom: 130px; left: 20px; background: #fff;
+      padding: 12px 16px; border-radius: 16px; max-width: 65vw;
+      box-shadow: 0 4px 16px #0004; display: none; font-weight: 500;
+      animation: pop 0.3s; z-index: 11; font-size: 14px;
+    }
+    #bubble:after {
+      content: ''; position: absolute; bottom: -10px; left: 30px;
+      border: 10px solid transparent; border-top-color: #fff;
+    }
+    @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+    #main {
+      background: #000d; backdrop-filter: blur(8px); padding: 20px; border-radius: 16px;
+      color: #fff; text-align: center; display: none; border: 2px solid #fff3;
+      width: 100%; max-width: 400px; z-index: 5;
+    }
+    input {
+      padding: 14px; margin: 12px 0; border-radius: 12px; border: none; width: 100%;
+      font-size: 16px;
+    }
+    button {
+      background: #c00; color: #fff; font-weight: bold; cursor: pointer;
+      padding: 14px 24px; border: none; border-radius: 12px; margin-top: 8px;
+      transition: 0.2s; width: 100%; font-size: 16px;
+    }
+    button:active { background: #a00; transform: scale(0.98); }
+    button:disabled { background: #666; }
+    #result { margin-top: 16px; font-weight: bold; min-height: 60px; line-height: 1.4; font-size: 14px; }
+    h2 { font-size: 18px; margin: 0 0 8px 0; min-height: 50px; }
   </style>
 </head>
 <body>
   <div id="game">
     <div id="level">LEVEL 1</div>
-    <!-- Ganti src ini pake file yang udah kamu download -->
-    <img id="maskot" src="/maskot.png" alt="Kak Taksaka">
+    <img id="maskot" src="/maskot-indo.png" alt="Kak Taksaka">
     <div id="bubble"></div>
 
     <div id="main">
       <h2 id="mission">Kak Taksaka lagi nyiapin misi...</h2>
-      <input id="answer" placeholder="Tulis yel-yel kreatif kamu di sini">
-      <br><button onclick="submit()">LAPORKAN, KAK!</button>
+      <input id="answer" placeholder="Tulis yel-yel kreatif kamu">
+      <br><button id="btnLapor" onclick="submit()">LAPORKAN, KAK!</button>
       <p id="result"></p>
     </div>
   </div>
@@ -74,6 +73,7 @@ h2 { font-size: 18px; margin: 0 0 8px 0; }
 const bubble = document.getElementById('bubble');
 const maskot = document.getElementById('maskot');
 const main = document.getElementById('main');
+const btnLapor = document.getElementById('btnLapor');
 let currentKeyword = '', level = 1;
 
 function showBubble(text) {
@@ -83,15 +83,20 @@ function showBubble(text) {
 }
 
 async function fetchAPI(params) {
-  const res = await fetch(`/api/game?${params}`);
-  return res.json();
+  try {
+    const res = await fetch(`/api/game?${params}`);
+    return await res.json();
+  } catch {
+    return { error: "Gagal konek server" }
+  }
 }
 
 async function init() {
   const w = await fetchAPI('action=welcome');
-  showBubble(w.text);
+  if(w.error) return showBubble('Kak Taksaka lagi error: ' + w.error);
+  showBubble(w.text || 'Siap Ksatria! Merdeka!');
 
-  bubble.onclick = async () => {
+  bubble.onclick = () => {
     bubble.style.display = 'none';
     main.style.display = 'block';
     loadMission();
@@ -102,43 +107,57 @@ async function loadMission() {
   document.getElementById('mission').innerText = 'Kak Taksaka lagi mikir...';
   document.getElementById('answer').value = '';
   document.getElementById('result').innerText = '';
+  btnLapor.disabled = true;
+
   const m = await fetchAPI('action=mission&level=' + level);
+  if(m.error) {
+    document.getElementById('mission').innerText = 'Error: ' + m.error;
+    return;
+  }
   document.getElementById('mission').innerText = m.mission;
   currentKeyword = m.keyword;
   document.getElementById('level').innerText = `LEVEL ${level}`;
+  btnLapor.disabled = false;
 }
 
 async function submit() {
-  const answer = document.getElementById('answer').value;
+  const answer = document.getElementById('answer').value.trim();
   if(!answer) return showBubble('Isi dulu dong yel-yelnya!');
+
+  btnLapor.disabled = true;
   document.getElementById('result').innerText = 'Dinilai Kak Taksaka...';
 
   const j = await fetchAPI(`action=judge&answer=${encodeURIComponent(answer)}&level=${level}`);
-  const hasil = j.result || 'Error kak';
+  if(j.error) {
+    document.getElementById('result').innerText = 'Error: ' + j.error;
+    btnLapor.disabled = false;
+    return;
+  }
 
-  const skorMatch = hasil.match(/SKOR[:\s]*(\d+)/i);
-  const skor = skorMatch? skorMatch[1] : '??';
-  const komen = hasil.split('|')[1] || hasil;
+  const skor = j.skor || 0;
+  const komen = j.komen || 'Coba lagi';
 
-  document.getElementById('result').innerHTML = `<b>SKOR: ${skor}</b><br>${komen.replace('KOMEN:', '')}`;
+  document.getElementById('result').innerHTML = `<b>SKOR: ${skor}</b><br>${komen}`;
 
-  if(parseInt(skor) >= 75) {
+  if(skor >= 75) {
     level++;
-    showBubble('Mantap! Naik ke Level ' + level + ' Merdeka!');
-    setTimeout(loadMission, 2000);
+    showBubble(`Mantap! Skor ${skor}. Naik Level ${level}! Merdeka!`);
+    setTimeout(loadMission, 2500);
   } else {
-    showBubble('Coba lagi ya! Semangat 45!');
+    showBubble(`Skor ${skor}. Coba lagi ya! Semangat 45!`);
+    btnLapor.disabled = false;
   }
 }
-  
-maskot.onclick = () => showBubble('Siap, Ksatria! Klik gelembungku kalo mau mulai.');
+
 document.getElementById('level').onclick = () => {
   if(confirm('Mau ulang dari Level 1?')) {
     level = 1;
     loadMission();
     showBubble('Siap! Mulai dari awal. Merdeka!');
   }
-  }
+}
+
+maskot.onclick = () => showBubble('Siap, Ksatria! Klik gelembungku kalo mau mulai.');
 init();
 </script>
 </body>
