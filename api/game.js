@@ -5,7 +5,6 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY;
 async function gemini(text) {
   if (!GEMINI_KEY) return 'Error kak, API Key kosong. Cek Vercel Env!';
   try {
-    // INI YANG BENER VEX - v1 + flash-latest
     const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
