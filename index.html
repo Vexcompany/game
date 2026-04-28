@@ -1,186 +1,1195 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Ksatria Kata Pagaska</title>
+  <title>Ksatria Kata Pagaska — Game Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Exo+2:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --red: #e50000;
+      --red-dark: #8b0000;
+      --red-glow: #ff2020;
+      --gold: #ffd700;
+      --gold-dark: #b8860b;
+      --white: #fff;
+      --black: #0a0a0a;
+      --card-bg: rgba(20,0,0,0.75);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0a0a0a; font-family: 'Segoe UI', sans-serif; }
-    #game {
-      width: 100%; min-height: 100dvh; position: relative;
-      background: linear-gradient(180deg, #c00 0%, #c00 50%, #fff 50%, #fff 100%);
-      padding: 80px 16px 160px 16px;
-      display: flex; justify-content: center; align-items: flex-start;
+    html, body { width: 100%; min-height: 100%; overflow-x: hidden; }
+    body {
+      background: var(--black);
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100dvh;
+      position: relative;
     }
-    #level {
-      position: fixed; top: 16px; right: 16px; background: #fff;
-      padding: 8px 16px; border-radius: 20px; font-weight: bold; color: #c00;
-      z-index: 10; box-shadow: 0 2px 8px #0003; cursor: pointer;
+
+    /* ── ANIMATED BG ── */
+    #bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 50% 0%, #3a0000 0%, #0a0a0a 70%);
+      overflow: hidden;
     }
-    #maskot {
-      position: fixed; bottom: 10px; left: 10px; width: 110px;
-      cursor: pointer; transition: transform 0.2s; filter: drop-shadow(0 4px 8px #0008);
-      z-index: 10;
+    #bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L60 30 L30 60 L0 30z' fill='none' stroke='%23ffffff08' stroke-width='1'/%3E%3C/svg%3E") repeat;
+      animation: bgScroll 30s linear infinite;
     }
-    #maskot:active { transform: scale(0.95); }
+    @keyframes bgScroll { to { background-position: 60px 60px; } }
+    .spark {
+      position: absolute; border-radius: 50%;
+      background: var(--gold); opacity: 0; pointer-events: none;
+      animation: sparkle 4s infinite;
+    }
+    @keyframes sparkle {
+      0%,100%{opacity:0;transform:scale(0)} 50%{opacity:.7;transform:scale(1)}
+    }
+
+    /* ── HEADER ── */
+    #header {
+      position: relative; z-index: 5; text-align: center;
+      padding: 32px 16px 8px;
+    }
+    #header h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(18px, 5vw, 32px);
+      color: var(--gold);
+      text-shadow: 0 0 20px var(--gold), 0 2px 4px #000;
+      letter-spacing: 2px; line-height: 1.2;
+    }
+    #header .sub {
+      color: #fff8; font-size: 13px; margin-top: 6px; font-weight: 600; letter-spacing: 3px;
+    }
+    .divider {
+      width: 80%; max-width: 320px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 12px auto;
+    }
+
+    /* ── GAME GRID ── */
+    #grid {
+      position: relative; z-index: 5;
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 14px; padding: 0 14px 200px;
+      max-width: 480px; margin: 0 auto;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,215,0,0.25);
+      border-radius: 18px; padding: 18px 12px;
+      text-align: center; cursor: pointer;
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+      backdrop-filter: blur(10px);
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 18px;
+      background: radial-gradient(circle at 50% 0%, rgba(255,215,0,.08) 0%, transparent 70%);
+    }
+    .card:active { transform: scale(0.96); box-shadow: 0 0 20px var(--red-glow); border-color: var(--red); }
+    .card-icon { font-size: 36px; margin-bottom: 8px; display: block; }
+    .card-name {
+      font-family: 'Cinzel Decorative', serif; font-size: 11px;
+      color: var(--gold); letter-spacing: 1px; line-height: 1.3;
+    }
+    .card-desc { font-size: 11px; color: #fff7; margin-top: 4px; }
+    .card-badge {
+      position: absolute; top: 8px; right: 8px;
+      background: var(--red); color: #fff; font-size: 9px;
+      font-weight: 800; padding: 2px 6px; border-radius: 6px; letter-spacing: .5px;
+    }
+
+    /* ── MASCOT ── */
+    #mascot-wrap {
+      position: fixed; bottom: 0; left: 0;
+      z-index: 20; display: flex; flex-direction: column; align-items: flex-start;
+    }
     #bubble {
-      position: fixed; bottom: 130px; left: 20px; background: #fff;
-      padding: 12px 16px; border-radius: 16px; max-width: 65vw;
-      box-shadow: 0 4px 16px #0004; display: none; font-weight: 500;
-      animation: pop 0.3s; z-index: 11; font-size: 14px;
+      position: absolute; bottom: 130px; left: 10px;
+      background: #fff; color: #222; font-size: 13px; font-weight: 600;
+      padding: 12px 14px; border-radius: 16px 16px 16px 4px;
+      max-width: 58vw; box-shadow: 0 6px 24px #0007;
+      display: none; line-height: 1.5;
+      animation: popIn .3s cubic-bezier(.34,1.56,.64,1);
+      cursor: pointer; z-index: 21;
     }
-    #bubble:after {
-      content: ''; position: absolute; bottom: -10px; left: 30px;
+    #bubble::after {
+      content: ''; position: absolute; bottom: -10px; left: 16px;
       border: 10px solid transparent; border-top-color: #fff;
     }
-    @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
-    #main {
-      background: #000d; backdrop-filter: blur(8px); padding: 20px; border-radius: 16px;
-      color: #fff; text-align: center; display: none; border: 2px solid #fff3;
-      width: 100%; max-width: 400px; z-index: 5;
+    @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+    #mascot {
+      width: 100px; cursor: pointer; margin: 0 0 4px 6px;
+      filter: drop-shadow(0 4px 12px rgba(229,0,0,.5));
+      transition: transform .2s;
     }
-    input {
-      padding: 14px; margin: 12px 0; border-radius: 12px; border: none; width: 100%;
-      font-size: 16px;
+    #mascot:active { transform: scale(0.93) rotate(-4deg); }
+    #mascot.bounce {
+      animation: mascotBounce 0.6s ease;
     }
-    button {
-      background: #c00; color: #fff; font-weight: bold; cursor: pointer;
-      padding: 14px 24px; border: none; border-radius: 12px; margin-top: 8px;
-      transition: 0.2s; width: 100%; font-size: 16px;
+    @keyframes mascotBounce {
+      0%{transform:translateY(0)} 30%{transform:translateY(-18px)} 60%{transform:translateY(-8px)} 100%{transform:translateY(0)}
     }
-    button:active { background: #a00; transform: scale(0.98); }
-    button:disabled { background: #666; }
-    #result { margin-top: 16px; font-weight: bold; min-height: 60px; line-height: 1.4; font-size: 14px; }
-    h2 { font-size: 18px; margin: 0 0 8px 0; min-height: 50px; }
+    #tap-hint { font-size: 10px; color: #fff5; text-align: center; width: 100px; margin-left: 6px; }
+
+    /* ── OVERLAY GAME SCREENS ── */
+    .game-screen {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,.97);
+      display: none; flex-direction: column;
+      overflow-y: auto;
+    }
+    .game-screen.active { display: flex; }
+    .game-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px; border-bottom: 1px solid rgba(255,215,0,.2);
+      position: sticky; top: 0; background: rgba(0,0,0,.95); z-index: 2;
+    }
+    .back-btn {
+      background: var(--red); color: #fff; border: none;
+      border-radius: 10px; padding: 8px 14px; font-weight: 800;
+      font-size: 13px; cursor: pointer; font-family: 'Exo 2', sans-serif;
+    }
+    .game-title {
+      font-family: 'Cinzel Decorative', serif;
+      color: var(--gold); font-size: 14px;
+    }
+    .game-body {
+      flex: 1; padding: 16px; display: flex;
+      flex-direction: column; align-items: center;
+    }
+
+    /* ── AI HINT BOX ── */
+    .ai-box {
+      background: linear-gradient(135deg, rgba(255,215,0,.1), rgba(229,0,0,.1));
+      border: 1px solid rgba(255,215,0,.3);
+      border-radius: 14px; padding: 12px; margin: 12px 0;
+      font-size: 12px; color: #ffe; line-height: 1.6;
+      width: 100%; max-width: 380px;
+    }
+    .ai-box .ai-label {
+      font-weight: 800; color: var(--gold); font-size: 11px;
+      letter-spacing: 1px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+    }
+    .ai-btn {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #000; font-weight: 800; border: none; border-radius: 10px;
+      padding: 10px 20px; cursor: pointer; font-size: 13px;
+      font-family: 'Exo 2', sans-serif; width: 100%; max-width: 380px;
+      transition: .2s; margin: 6px 0;
+    }
+    .ai-btn:active { transform: scale(.97); }
+    .ai-btn:disabled { background: #444; color: #888; }
+
+    /* ── SUDOKU ── */
+    #sudoku-grid {
+      display: grid; grid-template-columns: repeat(9, 1fr);
+      gap: 1px; background: rgba(255,215,0,.4);
+      border: 2px solid var(--gold); border-radius: 8px;
+      width: min(calc(100vw - 32px), 360px); aspect-ratio: 1;
+      margin: 8px 0;
+    }
+    .s-cell {
+      background: rgba(10,0,0,.85); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(12px, 3.5vw, 18px); font-weight: 700;
+      cursor: pointer; user-select: none; transition: background .1s;
+      position: relative;
+    }
+    .s-cell.given { color: var(--gold); }
+    .s-cell.selected { background: rgba(229,0,0,.4) !important; }
+    .s-cell.highlight { background: rgba(229,0,0,.15); }
+    .s-cell.error { color: #ff4444; }
+    .s-cell.box-right { border-right: 2px solid rgba(255,215,0,.6); }
+    .s-cell.box-bottom { border-bottom: 2px solid rgba(255,215,0,.6); }
+    #numpad {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 8px; width: min(calc(100vw - 32px), 360px); margin: 8px 0;
+    }
+    .num-btn {
+      background: rgba(30,0,0,.8); border: 1px solid rgba(255,215,0,.3);
+      color: #fff; border-radius: 10px; padding: 12px 4px;
+      font-size: 18px; font-weight: 700; cursor: pointer;
+      transition: .15s; font-family: 'Exo 2', sans-serif;
+    }
+    .num-btn:active { background: var(--red); }
+
+    /* ── BLOCK BLAST ── */
+    #bb-board {
+      display: grid; grid-template-columns: repeat(8, 1fr);
+      gap: 2px;
+      width: min(calc(100vw - 32px), 340px); aspect-ratio: 1;
+      background: rgba(255,215,0,.2); border: 2px solid var(--gold);
+      border-radius: 10px; padding: 4px; margin: 8px 0;
+    }
+    .bb-cell {
+      border-radius: 5px; background: rgba(20,0,0,.6);
+      transition: background .15s;
+    }
+    #bb-pieces {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      justify-content: center; margin: 10px 0;
+    }
+    .bb-piece-wrap {
+      border: 2px solid rgba(255,215,0,.3); border-radius: 10px;
+      padding: 8px; cursor: grab; touch-action: none;
+      background: rgba(20,0,0,.6); transition: border-color .2s;
+    }
+    .bb-piece-wrap.selected { border-color: var(--gold); }
+    .bb-piece-grid { display: grid; gap: 2px; }
+    .bb-piece-cell { width: 18px; height: 18px; border-radius: 4px; }
+
+    /* ── WORD SCRAMBLE ── */
+    .word-display {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(20px, 6vw, 30px); color: var(--gold);
+      letter-spacing: 8px; margin: 16px 0; text-align: center;
+    }
+    .letter-btns {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; max-width: 360px;
+    }
+    .letter-btn {
+      background: rgba(30,0,0,.8); border: 2px solid rgba(255,215,0,.4);
+      color: #fff; border-radius: 10px; width: 44px; height: 44px;
+      font-size: 18px; font-weight: 700; cursor: pointer;
+      font-family: 'Exo 2', sans-serif; transition: .15s;
+    }
+    .letter-btn:disabled { opacity: .3; }
+    .letter-btn:active { background: var(--red); }
+    .answer-row {
+      display: flex; gap: 6px; margin: 12px 0; flex-wrap: wrap;
+      justify-content: center; min-height: 52px; align-items: center;
+    }
+    .answer-slot {
+      width: 40px; height: 48px;
+      border-bottom: 3px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800; color: #fff; cursor: pointer;
+    }
+
+    /* ── MEMORY MATCH ── */
+    #memory-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; width: min(calc(100vw - 32px), 360px); margin: 8px 0;
+    }
+    .mem-card {
+      aspect-ratio: 1; border-radius: 12px;
+      background: linear-gradient(135deg, #3a0000, #600);
+      border: 2px solid rgba(255,215,0,.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; cursor: pointer; user-select: none;
+      transition: transform .3s; transform-style: preserve-3d;
+    }
+    .mem-card.flipped { transform: rotateY(180deg); }
+    .mem-card.matched { border-color: var(--gold); background: rgba(255,215,0,.15); }
+
+    /* ── 2048 ── */
+    #g2048-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; background: rgba(255,215,0,.2);
+      border: 2px solid var(--gold); border-radius: 12px;
+      padding: 8px; width: min(calc(100vw - 32px), 360px);
+      aspect-ratio: 1; margin: 8px 0; touch-action: none;
+    }
+    .t-cell {
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-weight: 900; font-size: clamp(16px, 5vw, 24px);
+      font-family: 'Cinzel Decorative', serif;
+      transition: background .1s;
+    }
+
+    /* ── SNAKE ── */
+    #snake-canvas {
+      border: 2px solid var(--gold); border-radius: 12px;
+      width: min(calc(100vw - 32px), 340px); aspect-ratio: 1;
+      touch-action: none; display: block; margin: 8px auto;
+    }
+    #dpad {
+      display: grid; grid-template-columns: repeat(3, 60px);
+      grid-template-rows: repeat(3, 60px);
+      gap: 4px; margin: 12px auto;
+    }
+    .dpad-btn {
+      background: rgba(30,0,0,.8); border: 1px solid rgba(255,215,0,.4);
+      border-radius: 12px; font-size: 22px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; user-select: none; -webkit-user-select: none;
+    }
+    .dpad-btn:active { background: var(--red); }
+    .dpad-center { background: transparent !important; border-color: transparent !important; }
+
+    /* ── STATS ── */
+    .score-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; max-width: 380px; background: rgba(255,255,255,.05);
+      border-radius: 12px; padding: 10px 16px; margin: 8px 0; font-size: 14px;
+    }
+    .score-bar span:last-child { color: var(--gold); font-weight: 800; }
+
+    /* ── UTILS ── */
+    .btn-red {
+      background: linear-gradient(135deg, var(--red-dark), var(--red));
+      color: #fff; border: none; border-radius: 12px;
+      padding: 12px 24px; font-weight: 800; font-size: 15px;
+      cursor: pointer; font-family: 'Exo 2', sans-serif;
+      width: 100%; max-width: 380px; margin: 6px 0; transition: .2s;
+    }
+    .btn-red:active { transform: scale(.97); }
+    .center { text-align: center; }
+    .gold { color: var(--gold); }
+    .loading { color: #fff7; font-size: 13px; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+    .badge { background: var(--red); color: #fff; font-size: 11px; font-weight: 800;
+      padding: 2px 8px; border-radius: 6px; display: inline-block; }
   </style>
 </head>
 <body>
-  <div id="game">
-    <div id="level">LEVEL 1</div>
-    <img id="maskot" src="/maskot.png" alt="Kak Taksaka">
-    <div id="bubble"></div>
 
-    <div id="main">
-      <h2 id="mission">Kak Taksaka lagi nyiapin misi...</h2>
-      <input id="answer" placeholder="Tulis yel-yel kreatif kamu">
-      <br><button id="btnLapor" onclick="submit()">LAPORKAN, KAK!</button>
-      <p id="result"></p>
-    </div>
+<!-- BG -->
+<div id="bg"></div>
+
+<!-- HEADER -->
+<div id="header">
+  <h1>PAGASKA<br>GAME HUB</h1>
+  <div class="sub">✦ ARENA KSATRIA ✦</div>
+  <div class="divider"></div>
+</div>
+
+<!-- GAME GRID -->
+<div id="grid">
+  <div class="card" onclick="openGame('sudoku')">
+    <span class="card-icon">🔢</span>
+    <div class="card-name">Sudoku</div>
+    <div class="card-desc">Logika + AI Hint</div>
+    <div class="card-badge">AI</div>
   </div>
+  <div class="card" onclick="openGame('blockblast')">
+    <span class="card-icon">🟥</span>
+    <div class="card-name">Block Blast</div>
+    <div class="card-desc">Susun blok</div>
+    <div class="card-badge">AI</div>
+  </div>
+  <div class="card" onclick="openGame('wordscramble')">
+    <span class="card-icon">🔤</span>
+    <div class="card-name">Word Scramble</div>
+    <div class="card-desc">Susun kata acak</div>
+    <div class="card-badge">AI</div>
+  </div>
+  <div class="card" onclick="openGame('memory')">
+    <span class="card-icon">🃏</span>
+    <div class="card-name">Memory Match</div>
+    <div class="card-desc">Cocokkan pasangan</div>
+    <div class="card-badge">AI</div>
+  </div>
+  <div class="card" onclick="openGame('g2048')">
+    <span class="card-icon">🔢</span>
+    <div class="card-name">2048</div>
+    <div class="card-desc">Gabungkan angka</div>
+    <div class="card-badge">AI</div>
+  </div>
+  <div class="card" onclick="openGame('snake')">
+    <span class="card-icon">🐍</span>
+    <div class="card-name">Snake</div>
+    <div class="card-desc">Classic arcade</div>
+    <div class="card-badge">AI</div>
+  </div>
+</div>
+
+<!-- MASCOT -->
+<div id="mascot-wrap">
+  <div id="bubble" onclick="nextBubble()"></div>
+  <img id="mascot" src="maskot.png" alt="Kak Taksaka" onclick="mascotClick()">
+  <div id="tap-hint">Klik aku! 👆</div>
+</div>
+
+<!-- ═══════════════ GAME SCREENS ═══════════════ -->
+
+<!-- SUDOKU SCREEN -->
+<div class="game-screen" id="screen-sudoku">
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame()">← KEMBALI</button>
+    <div class="game-title">⬜ SUDOKU</div>
+  </div>
+  <div class="game-body">
+    <div class="score-bar">
+      <span>⏱ Waktu</span><span id="sudoku-timer">00:00</span>
+    </div>
+    <div class="score-bar">
+      <span>❌ Kesalahan</span><span id="sudoku-errors">0/3</span>
+    </div>
+    <div id="sudoku-grid"></div>
+    <div id="numpad"></div>
+    <div class="ai-box" id="sudoku-ai-box" style="display:none">
+      <div class="ai-label">✨ GEMINI AI HINT</div>
+      <div id="sudoku-ai-text">...</div>
+    </div>
+    <button class="ai-btn" onclick="sudokuAIHint()">🤖 Minta Hint dari Gemini AI</button>
+    <button class="btn-red" onclick="initSudoku()" style="margin-top:6px">🔄 Puzzle Baru</button>
+  </div>
+</div>
+
+<!-- BLOCK BLAST SCREEN -->
+<div class="game-screen" id="screen-blockblast">
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame()">← KEMBALI</button>
+    <div class="game-title">🟥 BLOCK BLAST</div>
+  </div>
+  <div class="game-body">
+    <div class="score-bar">
+      <span>🏆 Skor</span><span id="bb-score">0</span>
+    </div>
+    <div id="bb-board"></div>
+    <div style="font-size:12px;color:#fff7;margin-bottom:6px;">Pilih blok, lalu tap posisi di papan ↑</div>
+    <div id="bb-pieces"></div>
+    <div class="ai-box" id="bb-ai-box" style="display:none">
+      <div class="ai-label">✨ GEMINI AI STRATEGI</div>
+      <div id="bb-ai-text">...</div>
+    </div>
+    <button class="ai-btn" onclick="bbAIHint()">🤖 Strategi dari Gemini AI</button>
+    <button class="btn-red" onclick="initBlockBlast()">🔄 Main Lagi</button>
+  </div>
+</div>
+
+<!-- WORD SCRAMBLE SCREEN -->
+<div class="game-screen" id="screen-wordscramble">
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame()">← KEMBALI</button>
+    <div class="game-title">🔤 WORD SCRAMBLE</div>
+  </div>
+  <div class="game-body">
+    <div class="score-bar">
+      <span>🏆 Skor</span><span id="ws-score">0</span>
+    </div>
+    <div class="score-bar">
+      <span>📦 Level</span><span id="ws-level">1</span>
+    </div>
+    <div style="color:#fff7;font-size:12px;margin-bottom:4px;">Susun huruf-huruf ini menjadi kata:</div>
+    <div class="word-display" id="ws-scrambled"></div>
+    <div class="answer-row" id="ws-answer"></div>
+    <div class="letter-btns" id="ws-letters"></div>
+    <div class="ai-box" id="ws-ai-box" style="display:none">
+      <div class="ai-label">✨ GEMINI AI CLUE</div>
+      <div id="ws-ai-text">...</div>
+    </div>
+    <button class="ai-btn" onclick="wsAIHint()" style="margin-top:10px">🤖 Minta Clue dari Gemini AI</button>
+    <button class="btn-red" onclick="wsNewWord()">🔄 Kata Baru</button>
+  </div>
+</div>
+
+<!-- MEMORY MATCH SCREEN -->
+<div class="game-screen" id="screen-memory">
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame()">← KEMBALI</button>
+    <div class="game-title">🃏 MEMORY MATCH</div>
+  </div>
+  <div class="game-body">
+    <div class="score-bar">
+      <span>🔄 Langkah</span><span id="mem-moves">0</span>
+    </div>
+    <div class="score-bar">
+      <span>✅ Pasangan</span><span id="mem-pairs">0/8</span>
+    </div>
+    <div id="memory-grid"></div>
+    <div class="ai-box" id="mem-ai-box" style="display:none">
+      <div class="ai-label">✨ GEMINI AI TIP</div>
+      <div id="mem-ai-text">...</div>
+    </div>
+    <button class="ai-btn" onclick="memAIHint()">🤖 Tip Memori dari Gemini AI</button>
+    <button class="btn-red" onclick="initMemory()">🔄 Main Lagi</button>
+  </div>
+</div>
+
+<!-- 2048 SCREEN -->
+<div class="game-screen" id="screen-g2048">
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame()">← KEMBALI</button>
+    <div class="game-title">🔢 2048</div>
+  </div>
+  <div class="game-body">
+    <div class="score-bar">
+      <span>🏆 Skor</span><span id="t-score">0</span>
+    </div>
+    <div class="score-bar">
+      <span>🥇 Best</span><span id="t-best">0</span>
+    </div>
+    <div id="g2048-grid"></div>
+    <div style="font-size:12px;color:#fff7;margin:4px 0">Geser layar untuk bergerak</div>
+    <div class="ai-box" id="t-ai-box" style="display:none">
+      <div class="ai-label">✨ GEMINI AI MOVE</div>
+      <div id="t-ai-text">...</div>
+    </div>
+    <button class="ai-btn" onclick="t2048AIHint()">🤖 Saran Langkah dari Gemini AI</button>
+    <button class="btn-red" onclick="init2048()">🔄 Reset</button>
+  </div>
+</div>
+
+<!-- SNAKE SCREEN -->
+<div class="game-screen" id="screen-snake">
+  <div class="game-header">
+    <button class="back-btn" onclick="closeGame()">← KEMBALI</button>
+    <div class="game-title">🐍 SNAKE</div>
+  </div>
+  <div class="game-body">
+    <div class="score-bar">
+      <span>🏆 Skor</span><span id="sn-score">0</span>
+    </div>
+    <div class="score-bar">
+      <span>🥇 Best</span><span id="sn-best">0</span>
+    </div>
+    <canvas id="snake-canvas" width="340" height="340"></canvas>
+    <div id="dpad">
+      <div></div>
+      <div class="dpad-btn" ontouchstart="snDir(0,-1)" onclick="snDir(0,-1)">▲</div>
+      <div></div>
+      <div class="dpad-btn" ontouchstart="snDir(-1,0)" onclick="snDir(-1,0)">◀</div>
+      <div class="dpad-btn dpad-center" id="sn-start-btn" onclick="snakeStart()">▶</div>
+      <div class="dpad-btn" ontouchstart="snDir(1,0)" onclick="snDir(1,0)">▶</div>
+      <div></div>
+      <div class="dpad-btn" ontouchstart="snDir(0,1)" onclick="snDir(0,1)">▼</div>
+      <div></div>
+    </div>
+    <div class="ai-box" id="sn-ai-box" style="display:none">
+      <div class="ai-label">✨ GEMINI AI TIP</div>
+      <div id="sn-ai-text">...</div>
+    </div>
+    <button class="ai-btn" onclick="snAIHint()">🤖 Tips dari Gemini AI</button>
+  </div>
+</div>
 
 <script>
-const bubble = document.getElementById('bubble');
-const maskot = document.getElementById('maskot');
-const main = document.getElementById('main');
-const btnLapor = document.getElementById('btnLapor');
-let currentKeyword = '', level = 1;
-let welcomeStep = 0; // 0=belum, 1=udah sapa1, 2=udah sapa2
+// ─── CONFIG ───
+const GEMINI_KEY = ''; // Diisi dari API key env via backend, atau isi langsung untuk demo
 
-function showBubble(text) {
-  bubble.innerText = text;
-  bubble.style.display = 'block';
-  bubble.style.animation = 'pop 0.3s';
-  setTimeout(() => bubble.style.animation = 'none', 300);
-}
-
-async function fetchAPI(params) {
+// ─── GEMINI CALL ───
+async function callGemini(prompt) {
+  const apiUrl = '/api/game?action=gemini&prompt=' + encodeURIComponent(prompt);
   try {
-    const res = await fetch(`/api/game?${params}`);
-    return await res.json();
+    const r = await fetch(apiUrl);
+    const d = await r.json();
+    return d.text || d.error || 'Gemini tidak merespon';
   } catch {
-    return { error: "Gagal konek server" }
+    return 'Koneksi ke AI gagal. Pastikan API key sudah diset.';
   }
 }
 
-async function init() {
-  maskot.onclick = async () => {
-    if (welcomeStep === 0) {
-      // TAHAP 1: Sapaan pertama
-      const w1 = await fetchAPI('action=welcome1');
-      if(w1.error) return showBubble('Kak Taksaka error: ' + w1.error);
-      showBubble(w1.text);
-      welcomeStep = 1;
+// ─── SPARK BG ───
+(function(){
+  const bg = document.getElementById('bg');
+  for(let i=0;i<15;i++){
+    const s=document.createElement('div');
+    s.className='spark';
+    s.style.cssText=`width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${3+Math.random()*4}s`;
+    bg.appendChild(s);
+  }
+})();
+
+// ─── MASCOT SYSTEM ───
+const PHRASES = [
+  ["Selamat datang, Ksatria! ⚔️", 1],
+  ["Siap jadi legenda Pagaska?", 1],
+  ["Di sini ada 6 game seru menantimu!", 1],
+  ["Gunakan AI Gemini untuk bantuan! 🤖", 0],
+  ["Semangat pantang menyerah! 💪", 0],
+  ["Klik game manapun untuk memulai!", 0],
+];
+let phraseIdx=0, tapCount=0;
+const bubble=document.getElementById('bubble');
+const mascot=document.getElementById('mascot');
+
+function mascotClick(){
+  mascot.classList.remove('bounce');
+  void mascot.offsetWidth;
+  mascot.classList.add('bounce');
+  showPhrase(PHRASES[phraseIdx % PHRASES.length]);
+  phraseIdx++;
+  tapCount++;
+  if(tapCount===1) document.getElementById('tap-hint').style.display='none';
+}
+function showPhrase([text, auto]){
+  bubble.textContent=text;
+  bubble.style.display='block';
+  bubble.style.animation='none'; void bubble.offsetWidth; bubble.style.animation='popIn .3s cubic-bezier(.34,1.56,.64,1)';
+  if(auto) setTimeout(()=>{ bubble.style.display='none'; },3500);
+}
+function nextBubble(){ bubble.style.display='none'; }
+
+// Auto welcome
+setTimeout(()=>{ showPhrase(PHRASES[0]); phraseIdx=1; },800);
+
+// ─── GAME NAVIGATION ───
+let currentGame=null;
+function openGame(id){
+  currentGame=id;
+  document.querySelectorAll('.game-screen').forEach(s=>s.classList.remove('active'));
+  const screen=document.getElementById('screen-'+id);
+  if(screen){ screen.classList.add('active'); }
+  if(id==='sudoku' && !sudokuInited) initSudoku();
+  if(id==='blockblast') initBlockBlast();
+  if(id==='wordscramble') wsNewWord();
+  if(id==='memory') initMemory();
+  if(id==='g2048' && !tInited) init2048();
+  if(id==='snake') initSnake();
+}
+function closeGame(){
+  document.querySelectorAll('.game-screen').forEach(s=>s.classList.remove('active'));
+  if(snakeLoop) { clearInterval(snakeLoop); snakeLoop=null; }
+}
+
+// ══════════════════════════════════════════
+// ─── SUDOKU ───
+// ══════════════════════════════════════════
+let sudokuPuzzle=[], sudokuSolution=[], sudokuSelected=null, sudokuErrors=0, sudokuTimer=0, sudokuInterval=null, sudokuInited=false;
+const sudokuGrid=document.getElementById('sudoku-grid');
+
+function generateSudoku(){
+  // Simple valid Sudoku board with randomization
+  const base=[[5,3,4,6,7,8,9,1,2],[6,7,2,1,9,5,3,4,8],[1,9,8,3,4,2,5,6,7],
+               [8,5,9,7,6,1,4,2,3],[4,2,6,8,5,3,7,9,1],[7,1,3,9,2,4,8,5,6],
+               [9,6,1,5,3,7,2,8,4],[2,8,7,4,1,9,6,3,5],[3,4,5,2,8,6,1,7,9]];
+  // Shuffle rows within band and columns
+  function shuffleBands(grid){
+    [0,3,6].forEach(b=>{
+      const rows=[b,b+1,b+2]; rows.sort(()=>Math.random()-.5);
+      const tmp=rows.map(r=>[...grid[r]]);
+      rows.forEach((r,i)=>grid[r]=tmp[i]);
+    });
+    return grid;
+  }
+  let sol=shuffleBands(base.map(r=>[...r]));
+  // Random number mapping
+  const map=Array.from({length:9},(_,i)=>i+1).sort(()=>Math.random()-.5);
+  sol=sol.map(r=>r.map(v=>map[v-1]));
+  // Remove cells
+  const puzzle=sol.map(r=>[...r]);
+  const toRemove=40+Math.floor(Math.random()*5);
+  let removed=0;
+  while(removed<toRemove){
+    const r=Math.floor(Math.random()*9),c=Math.floor(Math.random()*9);
+    if(puzzle[r][c]!==0){ puzzle[r][c]=0; removed++; }
+  }
+  return {puzzle, sol};
+}
+
+function initSudoku(){
+  sudokuInited=true;
+  sudokuErrors=0; sudokuTimer=0;
+  if(sudokuInterval) clearInterval(sudokuInterval);
+  sudokuInterval=setInterval(()=>{
+    sudokuTimer++;
+    const m=Math.floor(sudokuTimer/60).toString().padStart(2,'0');
+    const s=(sudokuTimer%60).toString().padStart(2,'0');
+    document.getElementById('sudoku-timer').textContent=m+':'+s;
+  },1000);
+  document.getElementById('sudoku-errors').textContent='0/3';
+  document.getElementById('sudoku-ai-box').style.display='none';
+  const {puzzle,sol}=generateSudoku();
+  sudokuPuzzle=puzzle.map(r=>[...r]);
+  sudokuSolution=sol;
+  renderSudoku();
+  renderNumpad();
+}
+
+function renderSudoku(){
+  sudokuGrid.innerHTML='';
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+    const cell=document.createElement('div');
+    cell.className='s-cell';
+    const v=sudokuPuzzle[r][c];
+    if(v){
+      cell.textContent=v;
+      cell.classList.add('given');
+    }
+    if(c===2||c===5) cell.classList.add('box-right');
+    if(r===2||r===5) cell.classList.add('box-bottom');
+    cell.onclick=()=>selectCell(r,c,cell);
+    cell.id=`sc-${r}-${c}`;
+    sudokuGrid.appendChild(cell);
+  }
+}
+
+function selectCell(r,c,el){
+  if(sudokuSolution && sudokuPuzzle[r][c]===sudokuSolution[r][c] && sudokuPuzzle[r][c]!==0) return;
+  document.querySelectorAll('.s-cell').forEach(e=>{
+    e.classList.remove('selected','highlight');
+    const [,er,ec]= e.id.split('-').map(Number);
+    if(er===r||ec===c||( Math.floor(er/3)===Math.floor(r/3)&&Math.floor(ec/3)===Math.floor(c/3))) e.classList.add('highlight');
+  });
+  el.classList.add('selected');
+  sudokuSelected={r,c};
+}
+
+function renderNumpad(){
+  const pad=document.getElementById('numpad');
+  pad.innerHTML='';
+  [...Array(9).keys()].map(i=>i+1).concat([0]).forEach(n=>{
+    const b=document.createElement('button');
+    b.className='num-btn'; b.textContent=n===0?'⌫':n;
+    b.onclick=()=>placeNum(n);
+    pad.appendChild(b);
+  });
+}
+
+function placeNum(n){
+  if(!sudokuSelected) return;
+  const {r,c}=sudokuSelected;
+  const el=document.getElementById(`sc-${r}-${c}`);
+  if(!el||el.classList.contains('given')) return;
+  if(n===0){ sudokuPuzzle[r][c]=0; el.textContent=''; el.classList.remove('error'); return; }
+  sudokuPuzzle[r][c]=n;
+  el.textContent=n;
+  if(sudokuSolution[r][c]===n){
+    el.classList.remove('error'); el.style.color='#7fffb0';
+    if(sudokuPuzzle.every((row,ri)=>row.every((v,ci)=>v===sudokuSolution[ri][ci]))){
+      clearInterval(sudokuInterval);
+      setTimeout(()=>{ alert(`🎉 SELESAI! Waktu: ${document.getElementById('sudoku-timer').textContent}. Luar biasa, Ksatria!`); },200);
+    }
+  } else {
+    el.classList.add('error'); el.style.color='';
+    sudokuErrors++; document.getElementById('sudoku-errors').textContent=`${sudokuErrors}/3`;
+    if(sudokuErrors>=3){ clearInterval(sudokuInterval); setTimeout(()=>alert('❌ Game Over! 3 kesalahan. Coba lagi!'),200); }
+  }
+}
+
+async function sudokuAIHint(){
+  const btn=document.querySelector('#screen-sudoku .ai-btn');
+  btn.disabled=true; btn.textContent='Meminta hint...';
+  const board=sudokuPuzzle.map(r=>r.map(v=>v||'.').join(' ')).join('\n');
+  const hint=await callGemini(`Kamu adalah master Sudoku. Berikut papan Sudoku saat ini (titik = kosong):\n${board}\n\nBerikan 1 hint singkat dalam bahasa Indonesia tentang strategi atau sel mana yang harus diisi berikutnya. Jangan langsung kasih jawabannya.`);
+  document.getElementById('sudoku-ai-box').style.display='block';
+  document.getElementById('sudoku-ai-text').textContent=hint;
+  btn.disabled=false; btn.textContent='🤖 Minta Hint dari Gemini AI';
+}
+
+// ══════════════════════════════════════════
+// ─── BLOCK BLAST ───
+// ══════════════════════════════════════════
+const BB_SIZE=8;
+let bbBoard=[], bbScore=0, bbSelectedPiece=null, bbPieces=[];
+
+const PIECE_SHAPES=[
+  [[1,1,1]],[[1],[1],[1]],[[1,1],[1,1]],[[1,1,1],[0,1,0]],
+  [[1,0],[1,0],[1,1]],[[0,1],[0,1],[1,1]],[[1,1],[1,0]],
+  [[1,1],[0,1]],[[1,1,1,1]],[[1],[1],[1],[1]]
+];
+const PIECE_COLORS=['#e50000','#ffd700','#00aaff','#00cc66','#ff6600','#cc00ff','#ff3399'];
+
+function initBlockBlast(){
+  bbBoard=Array.from({length:BB_SIZE},()=>Array(BB_SIZE).fill(null));
+  bbScore=0; bbSelectedPiece=null;
+  document.getElementById('bb-score').textContent='0';
+  document.getElementById('bb-ai-box').style.display='none';
+  renderBBBoard(); spawnBBPieces();
+}
+
+function renderBBBoard(){
+  const board=document.getElementById('bb-board');
+  board.innerHTML='';
+  for(let r=0;r<BB_SIZE;r++) for(let c=0;c<BB_SIZE;c++){
+    const cell=document.createElement('div');
+    cell.className='bb-cell';
+    if(bbBoard[r][c]) cell.style.background=bbBoard[r][c];
+    cell.onclick=()=>placeBBPiece(r,c);
+    board.appendChild(cell);
+  }
+}
+
+function spawnBBPieces(){
+  bbPieces=Array.from({length:3},()=>{
+    const shape=PIECE_SHAPES[Math.floor(Math.random()*PIECE_SHAPES.length)];
+    const color=PIECE_COLORS[Math.floor(Math.random()*PIECE_COLORS.length)];
+    return {shape,color};
+  });
+  renderBBPieces();
+}
+
+function renderBBPieces(){
+  const container=document.getElementById('bb-pieces');
+  container.innerHTML='';
+  bbPieces.forEach((p,idx)=>{
+    if(!p) return;
+    const wrap=document.createElement('div');
+    wrap.className='bb-piece-wrap';
+    if(bbSelectedPiece===idx) wrap.classList.add('selected');
+    const grid=document.createElement('div');
+    grid.className='bb-piece-grid';
+    grid.style.gridTemplateColumns=`repeat(${p.shape[0].length},18px)`;
+    p.shape.forEach(row=>row.forEach(v=>{
+      const c=document.createElement('div');
+      c.className='bb-piece-cell';
+      c.style.background=v?p.color:'transparent';
+      if(v) c.style.boxShadow=`0 0 6px ${p.color}88`;
+      grid.appendChild(c);
+    }));
+    wrap.appendChild(grid);
+    wrap.onclick=()=>{ bbSelectedPiece=idx; renderBBPieces(); };
+    container.appendChild(wrap);
+  });
+}
+
+function placeBBPiece(r,c){
+  if(bbSelectedPiece===null) return;
+  const p=bbPieces[bbSelectedPiece];
+  if(!p) return;
+  // Check fit
+  for(let pr=0;pr<p.shape.length;pr++) for(let pc=0;pc<p.shape[pr].length;pc++){
+    if(!p.shape[pr][pc]) continue;
+    const nr=r+pr,nc=c+pc;
+    if(nr>=BB_SIZE||nc>=BB_SIZE||bbBoard[nr][nc]) return;
+  }
+  // Place
+  for(let pr=0;pr<p.shape.length;pr++) for(let pc=0;pc<p.shape[pr].length;pc++){
+    if(p.shape[pr][pc]) bbBoard[r+pr][c+pc]=p.color;
+  }
+  bbPieces[bbSelectedPiece]=null; bbSelectedPiece=null;
+  // Clear full rows/cols
+  let cleared=0;
+  for(let row=0;row<BB_SIZE;row++){
+    if(bbBoard[row].every(v=>v)){ bbBoard[row]=Array(BB_SIZE).fill(null); cleared++; }
+  }
+  for(let col=0;col<BB_SIZE;col++){
+    if(bbBoard.every(row=>row[col])){ bbBoard.forEach(row=>row[col]=null); cleared++; }
+  }
+  bbScore+=cleared*50+(p.shape.flat().filter(Boolean).length*5);
+  document.getElementById('bb-score').textContent=bbScore;
+  renderBBBoard(); renderBBPieces();
+  if(bbPieces.every(p=>!p)) spawnBBPieces();
+}
+
+async function bbAIHint(){
+  const btn=document.querySelector('#screen-blockblast .ai-btn');
+  btn.disabled=true; btn.textContent='Meminta strategi...';
+  const hint=await callGemini('Kamu adalah master Block Blast. Berikan 2-3 tips strategi singkat dalam bahasa Indonesia untuk bermain Block Blast: cara menempatkan blok dengan optimal, kapan harus membersihkan baris, dll. Jawab dalam 3 kalimat.');
+  document.getElementById('bb-ai-box').style.display='block';
+  document.getElementById('bb-ai-text').textContent=hint;
+  btn.disabled=false; btn.textContent='🤖 Strategi dari Gemini AI';
+}
+
+// ══════════════════════════════════════════
+// ─── WORD SCRAMBLE ───
+// ══════════════════════════════════════════
+const WS_WORDS=[
+  'MERDEKA','GAGAH','DISIPLIN','BANGSA','PASKIBRA','NEGARA','HORMAT','BENDERA',
+  'UPACARA','TANGGUH','PEMUDA','SEMANGAT','BERJUANG','PAHLAWAN','KARAKTER'
+];
+let wsWord='', wsAnswer=[], wsLevel=1, wsScore=0;
+
+function wsNewWord(){
+  wsAnswer=[];
+  document.getElementById('ws-ai-box').style.display='none';
+  wsWord=WS_WORDS[Math.floor(Math.random()*WS_WORDS.length)];
+  const scrambled=wsWord.split('').sort(()=>Math.random()-.5);
+  document.getElementById('ws-scrambled').textContent=scrambled.join(' ');
+  document.getElementById('ws-level').textContent=wsLevel;
+  renderWSLetters(scrambled); renderWSAnswer();
+}
+
+function renderWSLetters(letters){
+  const container=document.getElementById('ws-letters');
+  container.innerHTML='';
+  letters.forEach((l,i)=>{
+    const btn=document.createElement('button');
+    btn.className='letter-btn'; btn.textContent=l; btn.dataset.idx=i;
+    btn.onclick=()=>wsPickLetter(btn,l);
+    container.appendChild(btn);
+  });
+}
+
+function wsPickLetter(btn,l){
+  if(btn.disabled) return;
+  btn.disabled=true;
+  wsAnswer.push({l,btn}); renderWSAnswer();
+  if(wsAnswer.length===wsWord.length){ wsCheckAnswer(); }
+}
+
+function renderWSAnswer(){
+  const row=document.getElementById('ws-answer');
+  row.innerHTML='';
+  for(let i=0;i<wsWord.length;i++){
+    const slot=document.createElement('div'); slot.className='answer-slot';
+    if(wsAnswer[i]){ slot.textContent=wsAnswer[i].l; slot.onclick=()=>wsRemoveLetter(i); }
+    row.appendChild(slot);
+  }
+}
+
+function wsRemoveLetter(i){
+  const item=wsAnswer.splice(i,1)[0];
+  if(item) item.btn.disabled=false;
+  renderWSAnswer();
+}
+
+function wsCheckAnswer(){
+  const formed=wsAnswer.map(a=>a.l).join('');
+  if(formed===wsWord){
+    wsScore+=wsLevel*10; wsLevel++;
+    document.getElementById('ws-score').textContent=wsScore;
+    setTimeout(()=>{ wsNewWord(); },800);
+  } else {
+    wsAnswer=[]; document.querySelectorAll('.letter-btn').forEach(b=>b.disabled=false);
+    renderWSAnswer();
+  }
+}
+
+async function wsAIHint(){
+  const btn=document.querySelector('#screen-wordscramble .ai-btn');
+  btn.disabled=true; btn.textContent='Meminta clue...';
+  const hint=await callGemini(`Bantu pemain menebak kata ini dengan clue. Kata yang harus ditebak: "${wsWord}". Berikan 1 clue/petunjuk dalam bahasa Indonesia yang membantu tapi tidak langsung menyebutkan jawabannya. Maksimal 2 kalimat.`);
+  document.getElementById('ws-ai-box').style.display='block';
+  document.getElementById('ws-ai-text').textContent=hint;
+  btn.disabled=false; btn.textContent='🤖 Minta Clue dari Gemini AI';
+}
+
+// ══════════════════════════════════════════
+// ─── MEMORY MATCH ───
+// ══════════════════════════════════════════
+const MEM_EMOJIS=['🐉','⚔️','🛡️','🦅','🔥','🌟','🏆','💎'];
+let memCards=[], memFlipped=[], memMatched=0, memMoves=0, memLock=false;
+
+function initMemory(){
+  memMatched=0; memMoves=0; memFlipped=[]; memLock=false;
+  document.getElementById('mem-moves').textContent='0';
+  document.getElementById('mem-pairs').textContent='0/8';
+  document.getElementById('mem-ai-box').style.display='none';
+  const deck=[...MEM_EMOJIS,...MEM_EMOJIS].sort(()=>Math.random()-.5);
+  memCards=deck.map((emoji,i)=>({emoji,id:i,flipped:false,matched:false}));
+  renderMemory();
+}
+
+function renderMemory(){
+  const grid=document.getElementById('memory-grid');
+  grid.innerHTML='';
+  memCards.forEach((card,i)=>{
+    const el=document.createElement('div');
+    el.className='mem-card';
+    el.textContent=card.flipped||card.matched?card.emoji:'?';
+    if(card.flipped||card.matched) el.style.background='rgba(255,215,0,.15)';
+    if(card.matched) el.classList.add('matched');
+    el.onclick=()=>flipCard(i);
+    grid.appendChild(el);
+  });
+}
+
+function flipCard(i){
+  if(memLock||memCards[i].flipped||memCards[i].matched) return;
+  memCards[i].flipped=true; renderMemory();
+  memFlipped.push(i);
+  if(memFlipped.length===2){
+    memLock=true; memMoves++;
+    document.getElementById('mem-moves').textContent=memMoves;
+    const [a,b]=memFlipped;
+    if(memCards[a].emoji===memCards[b].emoji){
+      memCards[a].matched=memCards[b].matched=true;
+      memMatched++; document.getElementById('mem-pairs').textContent=`${memMatched}/8`;
+      memFlipped=[]; memLock=false; renderMemory();
+      if(memMatched===8) setTimeout(()=>alert(`🎉 Selesai dalam ${memMoves} langkah! Memori ksatria!`),200);
+    } else {
+      setTimeout(()=>{ memCards[a].flipped=memCards[b].flipped=false; memFlipped=[]; memLock=false; renderMemory(); },1000);
     }
   }
+}
 
-  bubble.onclick = async () => {
-    if (welcomeStep === 1) {
-      // TAHAP 2: Lanjut sapaan kedua
-      const w2 = await fetchAPI('action=welcome2');
-      if(w2.error) return showBubble('Kak Taksaka error: ' + w2.error);
-      showBubble(w2.text);
-      welcomeStep = 2;
-    } else if (welcomeStep === 2) {
-      // TAHAP 3: Masuk game
-      bubble.style.display = 'none';
-      main.style.display = 'block';
-      loadMission();
-      welcomeStep = 3;
-    }
+async function memAIHint(){
+  const btn=document.querySelector('#screen-memory .ai-btn');
+  btn.disabled=true; btn.textContent='Meminta tip...';
+  const hint=await callGemini('Berikan 2-3 tips singkat dalam bahasa Indonesia untuk bermain Memory Match dengan lebih baik. Tips tentang teknik mengingat kartu, strategi memilih kartu, dll. Singkat dan mudah dimengerti.');
+  document.getElementById('mem-ai-box').style.display='block';
+  document.getElementById('mem-ai-text').textContent=hint;
+  btn.disabled=false; btn.textContent='🤖 Tip Memori dari Gemini AI';
+}
+
+// ══════════════════════════════════════════
+// ─── 2048 ───
+// ══════════════════════════════════════════
+let tBoard=[], tScore=0, tBest=0, tInited=false;
+const T_COLORS={2:'#3a1a00',4:'#5a2800',8:'#7a3300',16:'#9a4400',32:'#ba5500',
+  64:'#da6600',128:'#e07700',256:'#e08800',512:'#d09900',1024:'#c0aa00',2048:'#b0bb00'};
+
+function init2048(){
+  tInited=true; tBoard=Array.from({length:4},()=>Array(4).fill(0)); tScore=0;
+  document.getElementById('t-score').textContent='0';
+  tAddTile(); tAddTile(); render2048();
+}
+
+function tAddTile(){
+  const empty=[];
+  tBoard.forEach((r,ri)=>r.forEach((v,ci)=>{ if(!v) empty.push([ri,ci]); }));
+  if(!empty.length) return;
+  const [r,c]=empty[Math.floor(Math.random()*empty.length)];
+  tBoard[r][c]=Math.random()<.9?2:4;
+}
+
+function render2048(){
+  const grid=document.getElementById('g2048-grid');
+  grid.innerHTML='';
+  tBoard.forEach(row=>row.forEach(v=>{
+    const cell=document.createElement('div');
+    cell.className='t-cell';
+    cell.style.background=v?T_COLORS[Math.min(v,2048)]||'#a0cc00':'rgba(20,0,0,.4)';
+    cell.style.color=v?(v<=4?'#ffd700':'#fff'):'transparent';
+    cell.textContent=v||'';
+    grid.appendChild(cell);
+  }));
+}
+
+function tMove(dir){
+  let moved=false;
+  const rotate=(b)=>b[0].map((_,c)=>b.map(r=>r[c]).reverse());
+  let board=tBoard.map(r=>[...r]);
+  const left=(b)=>b.map(row=>{
+    let r=row.filter(v=>v);
+    for(let i=0;i<r.length-1;i++) if(r[i]===r[i+1]){ r[i]*=2; tScore+=r[i]; r.splice(i+1,1); }
+    while(r.length<4) r.push(0);
+    return r;
+  });
+  if(dir==='left') { const n=left(board); if(JSON.stringify(n)!==JSON.stringify(board)){board=n;moved=true;} }
+  else if(dir==='right') { const n=left(board.map(r=>[...r].reverse())).map(r=>[...r].reverse()); if(JSON.stringify(n)!==JSON.stringify(board)){board=n;moved=true;} }
+  else if(dir==='up') { let r=rotate(rotate(rotate(left(rotate(board))))); if(JSON.stringify(r)!==JSON.stringify(board)){board=r;moved=true;} }
+  else if(dir==='down') { let r=rotate(left(rotate(rotate(rotate(board))))); if(JSON.stringify(r)!==JSON.stringify(board)){board=r;moved=true;} }
+  if(moved){
+    tBoard=board; tAddTile();
+    document.getElementById('t-score').textContent=tScore;
+    if(tScore>tBest){ tBest=tScore; document.getElementById('t-best').textContent=tBest; }
+    render2048();
   }
 }
 
-async function loadMission() {
-  document.getElementById('mission').innerText = 'Kak Taksaka lagi mikir...';
-  document.getElementById('answer').value = '';
-  document.getElementById('result').innerText = '';
-  btnLapor.disabled = true;
+// Touch/swipe for 2048
+let tTouchX=0,tTouchY=0;
+document.getElementById('g2048-grid').addEventListener('touchstart',e=>{ tTouchX=e.touches[0].clientX; tTouchY=e.touches[0].clientY; },{passive:true});
+document.getElementById('g2048-grid').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tTouchX, dy=e.changedTouches[0].clientY-tTouchY;
+  if(Math.max(Math.abs(dx),Math.abs(dy))<20) return;
+  if(Math.abs(dx)>Math.abs(dy)) tMove(dx>0?'right':'left');
+  else tMove(dy>0?'down':'up');
+});
 
-  const m = await fetchAPI('action=mission&level=' + level);
-  if(m.error) {
-    document.getElementById('mission').innerText = 'Error: ' + m.error;
-    return;
-  }
-  document.getElementById('mission').innerText = m.mission;
-  currentKeyword = m.keyword;
-  document.getElementById('level').innerText = `LEVEL ${level}`;
-  btnLapor.disabled = false;
+// Keyboard for 2048
+document.addEventListener('keydown',e=>{
+  if(currentGame!=='g2048') return;
+  if(e.key==='ArrowLeft') tMove('left');
+  if(e.key==='ArrowRight') tMove('right');
+  if(e.key==='ArrowUp') tMove('up');
+  if(e.key==='ArrowDown') tMove('down');
+});
+
+async function t2048AIHint(){
+  const btn=document.querySelector('#screen-g2048 .ai-btn');
+  btn.disabled=true; btn.textContent='Menganalisis...';
+  const board=tBoard.map(r=>r.join(' ')).join('\n');
+  const hint=await callGemini(`Kamu adalah ahli 2048. Berikut papan saat ini:\n${board}\n\nSarankan gerakan terbaik berikutnya (kiri/kanan/atas/bawah) dan alasannya dalam 2 kalimat bahasa Indonesia.`);
+  document.getElementById('t-ai-box').style.display='block';
+  document.getElementById('t-ai-text').textContent=hint;
+  btn.disabled=false; btn.textContent='🤖 Saran Langkah dari Gemini AI';
 }
 
-async function submit() {
-  const answer = document.getElementById('answer').value.trim();
-  if(!answer) return showBubble('Isi dulu dong yel-yelnya!');
+// ══════════════════════════════════════════
+// ─── SNAKE ───
+// ══════════════════════════════════════════
+const SN_SIZE=17, SN_CELL=20;
+let snSnake=[], snFood={}, snDir_={x:1,y:0}, snNextDir={x:1,y:0};
+let snScore=0, snBest=0, snLoop=null, snRunning=false;
+const snCanvas=document.getElementById('snake-canvas');
+const snCtx=snCanvas.getContext('2d');
+const snCanvasSize=snCanvas.width;
+const snCell=Math.floor(snCanvasSize/SN_SIZE);
 
-  btnLapor.disabled = true;
-  document.getElementById('result').innerText = 'Dinilai Kak Taksaka...';
-
-  const j = await fetchAPI(`action=judge&answer=${encodeURIComponent(answer)}&level=${level}`);
-  const hasil = j.result || 'Error: Gagal nilai';
-
-  let skor = 0;
-  let komen = hasil;
-  const skorMatch = hasil.match(/SKOR\s*:\s*(\d+)/i);
-  if(skorMatch) {
-    skor = parseInt(skorMatch[1]);
-    komen = hasil.split(/KOMEN\s*:\s*/i)[1] || 'Kerja bagus!';
-  } else {
-    const angkaMatch = hasil.match(/\d+/);
-    if(angkaMatch) skor = parseInt(angkaMatch[0]);
-    komen = hasil.replace(/skor\s*:?\s*\d+/i, '').trim();
-  }
-
-  document.getElementById('result').innerHTML = `<b>SKOR: ${skor}</b><br>${komen}`;
-
-  if(skor >= 75) {
-    level++;
-    showBubble(`Mantap! Skor ${skor}. Naik Level ${level}! Merdeka!`);
-    setTimeout(loadMission, 2500);
-  } else {
-    showBubble(`Skor ${skor}. Coba lagi ya! Semangat 45!`);
-    btnLapor.disabled = false;
-  }
+function initSnake(){
+  snSnake=[{x:8,y:8},{x:7,y:8},{x:6,y:8}];
+  snDir_={x:1,y:0}; snNextDir={x:1,y:0};
+  snScore=0; snRunning=false;
+  document.getElementById('sn-score').textContent='0';
+  document.getElementById('sn-ai-box').style.display='none';
+  if(snakeLoop) clearInterval(snakeLoop);
+  spawnSnFood(); snDraw();
+  document.getElementById('sn-start-btn').textContent='▶';
 }
 
-document.getElementById('level').onclick = () => {
-  if(confirm('Mau ulang dari Level 1?')) {
-    level = 1;
-    loadMission();
-    showBubble('Siap! Mulai dari awal. Merdeka!');
-  }
+function snakeStart(){
+  if(snRunning) return;
+  snRunning=true;
+  document.getElementById('sn-start-btn').textContent='⏸';
+  snakeLoop=setInterval(snTick,150);
 }
 
-init();
+function spawnSnFood(){
+  do { snFood={x:Math.floor(Math.random()*SN_SIZE),y:Math.floor(Math.random()*SN_SIZE)}; }
+  while(snSnake.some(s=>s.x===snFood.x&&s.y===snFood.y));
+}
+
+function snTick(){
+  snDir_={...snNextDir};
+  const head={x:(snSnake[0].x+snDir_.x+SN_SIZE)%SN_SIZE, y:(snSnake[0].y+snDir_.y+SN_SIZE)%SN_SIZE};
+  if(snSnake.some(s=>s.x===head.x&&s.y===head.y)){
+    clearInterval(snakeLoop); snRunning=false;
+    document.getElementById('sn-start-btn').textContent='▶';
+    snDraw(); setTimeout(()=>alert(`Game Over! Skor: ${snScore}`),100); return;
+  }
+  snSnake.unshift(head);
+  if(head.x===snFood.x&&head.y===snFood.y){
+    snScore+=10; document.getElementById('sn-score').textContent=snScore;
+    if(snScore>snBest){ snBest=snScore; document.getElementById('sn-best').textContent=snBest; }
+    spawnSnFood();
+  } else snSnake.pop();
+  snDraw();
+}
+
+function snDraw(){
+  snCtx.clearRect(0,0,snCanvasSize,snCanvasSize);
+  snCtx.fillStyle='rgba(10,0,0,.9)';
+  snCtx.fillRect(0,0,snCanvasSize,snCanvasSize);
+  // Grid
+  snCtx.strokeStyle='rgba(255,215,0,.08)';
+  for(let i=0;i<SN_SIZE;i++){
+    snCtx.beginPath(); snCtx.moveTo(i*snCell,0); snCtx.lineTo(i*snCell,snCanvasSize); snCtx.stroke();
+    snCtx.beginPath(); snCtx.moveTo(0,i*snCell); snCtx.lineTo(snCanvasSize,i*snCell); snCtx.stroke();
+  }
+  // Food
+  snCtx.fillStyle='#ffd700'; snCtx.shadowColor='#ffd700'; snCtx.shadowBlur=10;
+  snCtx.fillRect(snFood.x*snCell+1,snFood.y*snCell+1,snCell-2,snCell-2);
+  snCtx.shadowBlur=0;
+  // Snake
+  snSnake.forEach((s,i)=>{
+    snCtx.fillStyle=i===0?'#e50000':'#ff4444';
+    snCtx.shadowColor=i===0?'#e50000':'transparent'; snCtx.shadowBlur=i===0?8:0;
+    snCtx.fillRect(s.x*snCell+1,s.y*snCell+1,snCell-2,snCell-2);
+  });
+  snCtx.shadowBlur=0;
+}
+
+function snDir(dx,dy){
+  if(dx!==0&&snDir_.x===0) snNextDir={x:dx,y:0};
+  if(dy!==0&&snDir_.y===0) snNextDir={x:0,y:dy};
+  if(!snRunning) snakeStart();
+}
+
+// Swipe for snake
+let snTx=0,snTy=0;
+snCanvas.addEventListener('touchstart',e=>{ snTx=e.touches[0].clientX; snTy=e.touches[0].clientY; },{passive:true});
+snCanvas.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-snTx, dy=e.changedTouches[0].clientY-snTy;
+  if(Math.max(Math.abs(dx),Math.abs(dy))<20) return;
+  if(Math.abs(dx)>Math.abs(dy)) snDir(dx>0?1:-1,0);
+  else snDir(0,dy>0?1:-1);
+},{passive:true});
+
+document.addEventListener('keydown',e=>{
+  if(currentGame!=='snake') return;
+  if(e.key==='ArrowLeft') snDir(-1,0);
+  if(e.key==='ArrowRight') snDir(1,0);
+  if(e.key==='ArrowUp') snDir(0,-1);
+  if(e.key==='ArrowDown') snDir(0,1);
+});
+
+async function snAIHint(){
+  const btn=document.querySelector('#screen-snake .ai-btn');
+  btn.disabled=true; btn.textContent='Meminta tips...';
+  const hint=await callGemini('Berikan 3 tips singkat bermain Snake dalam bahasa Indonesia: cara bertahan lama, strategi menghindari tabrakan, cara efisien memakan makanan. Jawab singkat dan semangat!');
+  document.getElementById('sn-ai-box').style.display='block';
+  document.getElementById('sn-ai-text').textContent=hint;
+  btn.disabled=false; btn.textContent='🤖 Tips dari Gemini AI';
+}
 </script>
 </body>
 </html>
