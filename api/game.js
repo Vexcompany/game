@@ -3,27 +3,24 @@ export const config = { runtime: 'edge' };
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 async function gemini(text) {
-  if (!GEMINI_KEY) return { error: "API Key kosong" };
+  if (!GEMINI_KEY) return 'Error: API Key kosong';
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text }] }],
-        generationConfig: { temperature: 0.8, maxOutputTokens: 200 }
+        generationConfig: { temperature: 0.9, maxOutputTokens: 100 }
       })
     });
     if (!res.ok) {
         const err = await res.json();
-        return { error: `Gemini ${res.status}: ${err.error?.message || 'Unknown'}` };
+        return `Error: ${err.error?.message || res.status}`;
     }
     const data = await res.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
-    return { error: "Gemini ga bales JSON", raw: rawText };
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Error: Jawaban kosong';
   } catch (e) {
-    return { error: `Server crash: ${e.message}` };
+    return `Error: ${e.message}`;
   }
 }
 
@@ -36,21 +33,21 @@ export default async function handler(req) {
   const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
 
   if (action === 'welcome') {
-    const j = await gemini('Kamu Kak Taksaka maskot Paskibra. WAJIB balas HANYA JSON format ini: {"text": "sapaan 1 kalimat semangat akhiri Merdeka!"}. Jangan ada teks lain.');
-    return new Response(JSON.stringify(j), { headers });
+    const text = await gemini('Kamu Kak Taksaka maskot Paskibra SMKN 5. Sapa user baru 1 kalimat semangat, gaya villager COC, akhiri dengan "Merdeka!". Hanya 1 kalimat.');
+    return new Response(JSON.stringify({ text }), { headers });
   }
 
   if (action === 'mission') {
     const kataLvl = { 1: ['Merdeka', 'Disiplin'], 2: ['Pantang Menyerah', 'Gagah Berani'], 3: ['Jiwa Korsa'] };
     const list = kataLvl[Math.min(level, 3)];
     const random = list[Math.floor(Math.random() * list.length)];
-    const j = await gemini(`Level ${level}. WAJIB balas HANYA JSON format ini: {"mission": "buat misi 1 kalimat: suruh buat yel-yel Paskibra pake kata '${random}'", "keyword": "${random}"}. Jangan ada teks lain.`);
-    return new Response(JSON.stringify(j), { headers });
+    const text = await gemini(`Buat misi 1 kalimat: suruh buat yel-yel Paskibra pake kata "${random}". Gaya tegas tapi asik. Hanya 1 kalimat.`);
+    return new Response(JSON.stringify({ mission: text, keyword: random }), { headers });
   }
 
   if (action === 'judge') {
-    const j = await gemini(`Level ${level}. User jawab: "${answer}". Nilai 0-100. WAJIB balas HANYA JSON format ini: {"skor": angka, "komen": "komentar 1 kalimat gaya pembina Paskibra galak tapi sayang"}. Jangan ada teks lain.`);
-    return new Response(JSON.stringify(j), { headers });
+    const text = await gemini(`User jawab yel-yel: "${answer}". Nilailah dari 0-100. Balas dengan format PERSIS: SKOR: [angka] | KOMEN: [komentar 1 kalimat gaya pembina Paskibra galak tapi sayang]. Jangan tambah teks lain.`);
+    return new Response(JSON.stringify({ result: text }), { headers });
   }
 
   return new Response(JSON.stringify({ error: 'action salah' }), { headers, status: 400 });
