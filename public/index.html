@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pagaska Game Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Exo+2:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #e50000; --red-d: #8b0000; --red-g: #ff3333;
+      --gold: #ffd700; --gold-d: #b8860b; --gold-l: #fff3a0;
+      --bg: #080808; --card: rgba(18,2,2,0.85);
+      --border: rgba(255,215,0,0.22);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); font-family: 'Exo 2', sans-serif; min-height: 100dvh; overflow-x: hidden; }
+
+    /* BG */
+    #bg { position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 50% -10%, #2a0000 0%, var(--bg) 65%); }
+    #bg::after { content: '';position:fixed;inset:0;
+      background: url("data:image/svg+xml,%3Csvg width='50' height='50' viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='25' cy='25' r='1' fill='%23ffffff06'/%3E%3C/svg%3E") repeat;
+      pointer-events:none; }
+
+    /* HEADER */
+    #hdr { position: relative; z-index: 5; text-align: center; padding: 28px 16px 4px; }
+    #hdr h1 { font-family: 'Cinzel Decorative', serif; font-size: clamp(16px,5.5vw,28px);
+      color: var(--gold); text-shadow: 0 0 30px #ffd70088, 0 2px 4px #000; letter-spacing: 3px; }
+    .hdr-sub { color: rgba(255,255,255,.45); font-size: 11px; letter-spacing: 4px; margin-top: 5px; font-weight: 700; }
+    .divider { width: 70%; max-width: 280px; height: 1px; margin: 12px auto;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+
+    /* LEVEL PROGRESS */
+    #level-bar-wrap { position: relative; z-index: 5; padding: 0 16px 8px;
+      max-width: 480px; margin: 0 auto; }
+    .lvl-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .lvl-num { font-family: 'Cinzel Decorative', serif; color: var(--gold); font-size: 13px; }
+    .lvl-xp { color: rgba(255,255,255,.5); font-size: 11px; }
+    .lvl-bar-bg { background: rgba(255,255,255,.08); border-radius: 99px; height: 8px; overflow: hidden;
+      border: 1px solid var(--border); }
+    .lvl-bar-fill { height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--red-d), var(--red), var(--gold));
+      transition: width .5s cubic-bezier(.34,1.56,.64,1); }
+    .lvl-game-tag { font-size: 10px; color: rgba(255,215,0,.7); margin-top: 5px;
+      text-align: center; letter-spacing: 1px; font-weight: 700; }
+
+    /* MAIN GAME AREA */
+    #main-wrap { position: relative; z-index: 5; max-width: 480px; margin: 0 auto; padding: 8px 14px 200px; }
+
+    /* GAME CARD (active question) */
+    #game-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 20px 16px; margin-bottom: 14px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .gc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .gc-badge {
+      background: var(--red); color: #fff; font-size: 10px; font-weight: 800;
+      padding: 3px 10px; border-radius: 20px; letter-spacing: 1px;
+    }
+    .gc-level { color: var(--gold); font-family: 'Cinzel Decorative', serif; font-size: 12px; }
+    .gc-soal {
+      color: #fff; font-size: clamp(14px,4vw,18px); font-weight: 600;
+      text-align: center; line-height: 1.6; min-height: 60px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .gc-soal.emoji { font-size: clamp(40px,12vw,64px); }
+    .gc-img { width: 100%; max-width: 340px; border-radius: 14px; margin: 10px auto; display: block;
+      border: 1px solid var(--border); }
+
+    /* ANSWER AREA */
+    #answer-area { margin-top: 14px; }
+
+    /* TYPE: TEXT INPUT (asahotak, tebakkata, tebakbendera, tebakkimia) */
+    .ans-input-wrap { position: relative; }
+    .ans-input {
+      width: 100%; background: rgba(255,255,255,.06); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 14px 16px; color: #fff; font-size: 16px;
+      font-family: 'Exo 2', sans-serif; outline: none; transition: border .2s;
+    }
+    .ans-input:focus { border-color: var(--gold); }
+    .ans-input::placeholder { color: rgba(255,255,255,.3); }
+
+    /* TYPE: SUSUN KATA */
+    #susun-area { display: flex; flex-direction: column; gap: 10px; }
+    .susun-slots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+      min-height: 52px; padding: 8px; background: rgba(255,255,255,.04);
+      border: 1px dashed var(--border); border-radius: 12px; align-items: center; }
+    .slot-cell { width: 38px; height: 46px; background: rgba(255,215,0,.1);
+      border: 2px solid var(--gold); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; color: #fff; cursor: pointer; }
+    .letter-pool { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 4px; }
+    .pool-btn { width: 38px; height: 38px; background: rgba(30,0,0,.8);
+      border: 1.5px solid var(--border); border-radius: 8px;
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+      font-family: 'Exo 2', sans-serif; transition: .15s; }
+    .pool-btn:active, .pool-btn.selected { background: var(--red); border-color: var(--red); }
+    .pool-btn:disabled { opacity: .25; }
+
+    /* TYPE: FAMILY 100 */
+    #f100-answers { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .f100-slot {
+      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px; font-size: 14px;
+    }
+    .f100-slot .rank { color: var(--gold); font-weight: 800; font-size: 12px; min-width: 20px; }
+    .f100-slot .val { color: #fff; flex: 1; }
+    .f100-slot.revealed { background: rgba(255,215,0,.1); border-color: rgba(255,215,0,.4); }
+    .f100-slot.wrong { background: rgba(229,0,0,.15); border-color: rgba(229,0,0,.4); }
+    #f100-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    #f100-input-row input { flex: 1; }
+    #f100-input-row button { white-space: nowrap; padding: 14px 16px; border-radius: 14px;
+      background: var(--red); color: #fff; border: none; font-weight: 800; cursor: pointer;
+      font-family: 'Exo 2', sans-serif; font-size: 14px; }
+
+    /* BUTTONS */
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-d), var(--gold));
+      color: #000; border: none; border-radius: 14px; padding: 13px 20px;
+      font-weight: 800; font-size: 14px; cursor: pointer; width: 100%;
+      font-family: 'Exo 2', sans-serif; transition: .2s; margin-top: 8px;
+    }
+    .btn-gold:active { transform: scale(.97); }
+    .btn-gold:disabled { background: #333; color: #666; }
+    .btn-red {
+      background: linear-gradient(135deg, var(--red-d), var(--red));
+      color: #fff; border: none; border-radius: 14px; padding: 13px 20px;
+      font-weight: 800; font-size: 14px; cursor: pointer; width: 100%;
+      font-family: 'Exo 2', sans-serif; transition: .2s; margin-top: 6px;
+    }
+    .btn-red:active { transform: scale(.97); }
+    .btn-row { display: flex; gap: 8px; }
+    .btn-row .btn-gold, .btn-row .btn-red { flex: 1; }
+
+    /* FEEDBACK */
+    #feedback {
+      margin-top: 12px; padding: 12px 16px; border-radius: 14px;
+      font-weight: 700; font-size: 14px; text-align: center;
+      display: none; animation: feedPop .3s ease;
+    }
+    @keyframes feedPop { from{transform:scale(.9);opacity:0} to{transform:scale(1);opacity:1} }
+    #feedback.correct { background: rgba(0,200,100,.15); border: 1px solid rgba(0,200,100,.4); color: #0f9; }
+    #feedback.wrong { background: rgba(229,0,0,.15); border: 1px solid rgba(229,0,0,.4); color: #f77; }
+
+    /* AI HINT BOX */
+    .ai-box { background: linear-gradient(135deg,rgba(255,215,0,.07),rgba(229,0,0,.07));
+      border: 1px solid rgba(255,215,0,.25); border-radius: 14px; padding: 12px 14px;
+      margin-top: 10px; display: none; }
+    .ai-label { font-size: 10px; font-weight: 800; color: var(--gold);
+      letter-spacing: 2px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .ai-text { font-size: 13px; color: rgba(255,255,255,.85); line-height: 1.6; }
+    .btn-ai {
+      background: transparent; border: 1px solid rgba(255,215,0,.35);
+      color: var(--gold); border-radius: 12px; padding: 10px 16px;
+      font-size: 13px; font-weight: 700; cursor: pointer; width: 100%;
+      font-family: 'Exo 2', sans-serif; transition: .2s; margin-top: 8px;
+    }
+    .btn-ai:active { background: rgba(255,215,0,.1); }
+    .btn-ai:disabled { opacity: .4; }
+
+    /* MASCOT */
+    #mascot-wrap { position: fixed; bottom: 0; left: 0; z-index: 30; }
+    #bubble {
+      position: absolute; bottom: 125px; left: 10px;
+      background: #fff; color: #222; font-size: 13px; font-weight: 600;
+      padding: 11px 14px; border-radius: 14px 14px 14px 4px;
+      max-width: 60vw; box-shadow: 0 6px 24px rgba(0,0,0,.5);
+      display: none; line-height: 1.55; cursor: pointer; z-index: 31;
+    }
+    #bubble::after { content:'';position:absolute;bottom:-9px;left:14px;
+      border:9px solid transparent; border-top-color:#fff; }
+    #mascot { width: 96px; cursor: pointer; margin: 0 0 2px 8px;
+      filter: drop-shadow(0 4px 12px rgba(229,0,0,.45)); transition: transform .2s; }
+    #mascot:active { transform: scale(.92) rotate(-5deg); }
+    @keyframes mascotBounce { 0%{transform:translateY(0)} 35%{transform:translateY(-16px)} 65%{transform:translateY(-7px)} 100%{transform:translateY(0)} }
+    .bounce { animation: mascotBounce .55s ease !important; }
+
+    /* CATEGORY PILLS */
+    #cats { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0;
+      scrollbar-width: none; margin-bottom: 10px; }
+    #cats::-webkit-scrollbar { display: none; }
+    .cat-pill {
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      color: rgba(255,255,255,.6); font-size: 11px; font-weight: 700;
+      padding: 6px 14px; border-radius: 99px; white-space: nowrap; cursor: pointer;
+      transition: .2s; letter-spacing: .5px;
+    }
+    .cat-pill.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+    /* NEXT LEVEL MODAL */
+    #level-up-modal {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,.92); display: none;
+      align-items: center; justify-content: center; flex-direction: column;
+      gap: 16px; text-align: center; padding: 24px;
+    }
+    #level-up-modal.show { display: flex; animation: modalIn .4s ease; }
+    @keyframes modalIn { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+    .modal-star { font-size: 64px; }
+    .modal-title { font-family:'Cinzel Decorative',serif; font-size: 22px; color: var(--gold);
+      text-shadow: 0 0 20px var(--gold); }
+    .modal-sub { color: rgba(255,255,255,.6); font-size: 14px; }
+
+    /* STREAK */
+    #streak-display { position: fixed; top: 14px; right: 14px; z-index: 20;
+      background: rgba(255,215,0,.12); border: 1px solid rgba(255,215,0,.3);
+      border-radius: 12px; padding: 6px 12px; font-size: 12px; font-weight: 800;
+      color: var(--gold); display: flex; align-items: center; gap: 4px; }
+
+    /* LOADING */
+    .loading-pulse { animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.1) 50%, rgba(255,255,255,.05) 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; height: 20px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  </style>
+</head>
+<body>
+<div id="bg"></div>
+
+<!-- STREAK -->
+<div id="streak-display">🔥 <span id="streak-num">0</span></div>
+
+<!-- HEADER -->
+<div id="hdr">
+  <h1>PAGASKA GAME HUB</h1>
+  <div class="hdr-sub">✦ ARENA KSATRIA ✦</div>
+  <div class="divider"></div>
+</div>
+
+<!-- LEVEL BAR -->
+<div id="level-bar-wrap">
+  <div class="lvl-row">
+    <div class="lvl-num" id="lvl-label">LEVEL 1</div>
+    <div class="lvl-xp" id="lvl-xp">0 / 999</div>
+  </div>
+  <div class="lvl-bar-bg"><div class="lvl-bar-fill" id="lvl-fill" style="width:0.1%"></div></div>
+  <div class="lvl-game-tag" id="lvl-game-tag">📚 Memuat...</div>
+</div>
+
+<!-- MAIN GAME -->
+<div id="main-wrap">
+
+  <!-- CATEGORY FILTER -->
+  <div id="cats">
+    <div class="cat-pill active" onclick="filterCat('all')">🎮 Semua</div>
+    <div class="cat-pill" onclick="filterCat('asahotak')">🧠 Asah Otak</div>
+    <div class="cat-pill" onclick="filterCat('tebakkata')">💡 Tebak Kata</div>
+    <div class="cat-pill" onclick="filterCat('susunkata')">🔤 Susun Kata</div>
+    <div class="cat-pill" onclick="filterCat('tebakbendera')">🏳️ Bendera</div>
+    <div class="cat-pill" onclick="filterCat('tebakkimia')">⚗️ Kimia</div>
+    <div class="cat-pill" onclick="filterCat('tebakgambar')">🖼️ Gambar</div>
+    <div class="cat-pill" onclick="filterCat('family100')">👨‍👩‍👧 Family 100</div>
+  </div>
+
+  <!-- GAME CARD -->
+  <div id="game-card">
+    <div class="gc-header">
+      <div class="gc-badge" id="gc-badge">MEMUAT</div>
+      <div class="gc-level" id="gc-level">LVL 1</div>
+    </div>
+    <div class="gc-soal" id="gc-soal">
+      <div class="skeleton" style="width:80%;height:24px;"></div>
+    </div>
+    <img class="gc-img" id="gc-img" style="display:none" alt="Soal">
+  </div>
+
+  <!-- ANSWER AREA -->
+  <div id="answer-area">
+    <!-- Diisi oleh JS sesuai tipe game -->
+  </div>
+
+  <div id="feedback"></div>
+
+  <!-- AI HINT -->
+  <div class="ai-box" id="ai-box">
+    <div class="ai-label">✨ GEMINI AI HINT</div>
+    <div class="ai-text" id="ai-text">...</div>
+  </div>
+  <button class="btn-ai" id="btn-ai" onclick="requestHint()">🤖 Minta Hint dari Gemini AI</button>
+</div>
+
+<!-- MASCOT -->
+<div id="mascot-wrap">
+  <div id="bubble" onclick="closeBubble()"></div>
+  <img id="mascot" src="maskot.png" alt="Kak Taksaka" onclick="mascotClick()">
+</div>
+
+<!-- LEVEL UP MODAL -->
+<div id="level-up-modal">
+  <div class="modal-star">⭐</div>
+  <div class="modal-title" id="modal-title">LEVEL UP!</div>
+  <div class="modal-sub" id="modal-sub">Selamat, Ksatria!</div>
+  <button class="btn-gold" style="max-width:280px" onclick="closeModal()">LANJUTKAN →</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════
+const SAVE_KEY = 'pagaska_save_v2';
+const GAME_LABELS = {
+  asahotak:     { name: 'Asah Otak',    icon: '🧠', color: '#ff6600' },
+  tebakkata:    { name: 'Tebak Kata',   icon: '💡', color: '#00aaff' },
+  susunkata:    { name: 'Susun Kata',   icon: '🔤', color: '#9900ff' },
+  tebakbendera: { name: 'Tebak Bendera',icon: '🏳️', color: '#00cc66' },
+  tebakkimia:   { name: 'Kimia',        icon: '⚗️', color: '#ffaa00' },
+  tebakgambar:  { name: 'Tebak Gambar', icon: '🖼️', color: '#ff3399' },
+  family100:    { name: 'Family 100',   icon: '👨‍👩‍👧', color: '#e50000' },
+};
+
+let state = {
+  level: 1,        // 1-999
+  streak: 0,
+  totalCorrect: 0,
+  categoryFilter: 'all',
+};
+
+// Load save
+function loadSave() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+    if (s.level && s.level >= 1 && s.level <= 999) state.level = s.level;
+    if (s.streak) state.streak = s.streak;
+    if (s.totalCorrect) state.totalCorrect = s.totalCorrect;
+  } catch {}
+}
+function saveState() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+loadSave();
+
+// ═══════════════════════════════════════════
+// CURRENT QUESTION STATE
+// ═══════════════════════════════════════════
+let currentQ = null;   // { level, game, soal }
+let f100Revealed = []; // family100 answered items
+let f100Tries = 0;     // wrong tries
+let susunChosen = [];  // susun kata chosen letters
+
+// ═══════════════════════════════════════════
+// LOAD QUESTION
+// ═══════════════════════════════════════════
+async function loadQuestion(level) {
+  // Update UI
+  updateLevelBar(level);
+  document.getElementById('gc-badge').textContent = '...';
+  document.getElementById('gc-soal').innerHTML = '<div class="skeleton" style="width:80%;height:24px"></div>';
+  document.getElementById('gc-img').style.display = 'none';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('ai-box').style.display = 'none';
+  document.getElementById('btn-ai').disabled = false;
+  document.getElementById('btn-ai').textContent = '🤖 Minta Hint dari Gemini AI';
+  document.getElementById('answer-area').innerHTML = '';
+
+  try {
+    // Jika filter aktif, cari level yang cocok dengan kategori
+    let targetLevel = level;
+    if (state.categoryFilter !== 'all') {
+      targetLevel = findLevelForCategory(level, state.categoryFilter);
+    }
+
+    const res = await fetch(`/api/game?action=soal&level=${targetLevel}`);
+    const data = await res.json();
+    currentQ = data;
+    renderQuestion(data);
+  } catch(e) {
+    document.getElementById('gc-soal').textContent = '⚠️ Gagal memuat soal. Cek koneksi.';
+  }
+}
+
+// Find next level that matches category filter
+function findLevelForCategory(startLevel, cat) {
+  const GAME_ORDER = ['asahotak','tebakkata','susunkata','tebakbendera','tebakkimia','tebakgambar','family100'];
+  const totalGames = GAME_ORDER.length;
+  for (let i = 0; i < 999; i++) {
+    const lvl = ((startLevel - 1 + i) % 999) + 1;
+    const idx = lvl - 1;
+    const gameIdx = idx % totalGames;
+    if (GAME_ORDER[gameIdx] === cat) return lvl;
+  }
+  return startLevel;
+}
+
+function renderQuestion(data) {
+  const { level, game, soal } = data;
+  const meta = GAME_LABELS[game] || { name: game, icon: '🎮' };
+
+  // Badge & level
+  document.getElementById('gc-badge').textContent = `${meta.icon} ${meta.name.toUpperCase()}`;
+  document.getElementById('gc-badge').style.background = meta.color || '#e50000';
+  document.getElementById('gc-level').textContent = `LVL ${level}`;
+
+  // SOAL rendering based on game type
+  const soalEl = document.getElementById('gc-soal');
+  const imgEl = document.getElementById('gc-img');
+
+  if (game === 'tebakbendera') {
+    soalEl.className = 'gc-soal emoji';
+    soalEl.textContent = soal.soal;
+    imgEl.style.display = 'none';
+  } else if (game === 'tebakgambar') {
+    soalEl.className = 'gc-soal';
+    soalEl.textContent = soal.deskripsi || '';
+    imgEl.src = soal.img;
+    imgEl.style.display = 'block';
+  } else if (game === 'family100') {
+    soalEl.className = 'gc-soal';
+    soalEl.textContent = `100 Orang Ditanya: "${soal.soal}"`;
+    imgEl.style.display = 'none';
+  } else {
+    soalEl.className = 'gc-soal';
+    soalEl.textContent = soal.soal;
+    imgEl.style.display = 'none';
+  }
+
+  // Render answer input based on game
+  renderAnswerInput(game, soal);
+}
+
+function renderAnswerInput(game, soal) {
+  const area = document.getElementById('answer-area');
+
+  if (game === 'susunkata') {
+    renderSusunKata(soal);
+  } else if (game === 'family100') {
+    renderFamily100(soal);
+  } else {
+    // Text input: asahotak, tebakkata, tebakbendera, tebakkimia, tebakgambar
+    const placeholder = {
+      tebakbendera: 'Nama negara...',
+      tebakkimia: 'Simbol kimia (misal: Fe)...',
+      tebakgambar: 'Jawaban...',
+      asahotak: 'Jawaban kamu...',
+      tebakkata: 'Jawaban kamu...',
+    }[game] || 'Jawaban...';
+
+    area.innerHTML = `
+      <div class="ans-input-wrap">
+        <input class="ans-input" id="main-input" placeholder="${placeholder}" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn-gold" onclick="checkTextAnswer()">✓ JAWAB</button>
+        <button class="btn-red" onclick="skipQuestion()">⏭ SKIP</button>
+      </div>
+    `;
+    const inp = document.getElementById('main-input');
+    inp.addEventListener('keydown', e => { if(e.key === 'Enter') checkTextAnswer(); });
+    setTimeout(() => inp.focus(), 100);
+  }
+}
+
+// ═══════════════════════════════════════════
+// ANSWER CHECKERS
+// ═══════════════════════════════════════════
+function normalize(s) {
+  return s.trim().toLowerCase()
+    .replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e')
+    .replace(/[ìíîï]/g,'i').replace(/[òóôõö]/g,'o')
+    .replace(/[ùúûü]/g,'u').replace(/\s+/g,' ');
+}
+
+function checkTextAnswer() {
+  const inp = document.getElementById('main-input');
+  if (!inp || !currentQ) return;
+  const userAns = inp.value.trim();
+  if (!userAns) return;
+  const correctAns = currentQ.soal.jawaban;
+  const isCorrect = normalize(userAns) === normalize(correctAns);
+  showFeedback(isCorrect, correctAns);
+  if (isCorrect) onCorrect();
+}
+
+function showFeedback(correct, correctAns) {
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  fb.className = correct ? 'correct' : 'wrong';
+  if (correct) {
+    fb.innerHTML = `✅ BENAR! +1 Streak 🔥`;
+  } else {
+    fb.innerHTML = `❌ Salah! Jawaban: <b>${correctAns}</b>`;
+  }
+  fb.style.animation = 'none'; void fb.offsetWidth; fb.style.animation = 'feedPop .3s ease';
+  // Disable input
+  const inp = document.getElementById('main-input');
+  if (inp) inp.disabled = true;
+  // Disable jawab btn
+  document.querySelectorAll('.btn-gold').forEach(b => {
+    if (b.textContent.includes('JAWAB')) b.disabled = true;
+  });
+}
+
+function onCorrect() {
+  state.streak++;
+  state.totalCorrect++;
+  document.getElementById('streak-num').textContent = state.streak;
+  // Auto next after delay
+  setTimeout(nextLevel, 1200);
+}
+
+function skipQuestion() {
+  state.streak = 0;
+  document.getElementById('streak-num').textContent = 0;
+  nextLevel();
+}
+
+function nextLevel() {
+  if (state.level < 999) {
+    state.level++;
+    saveState();
+    const oldLevel = state.level - 1;
+    // Show level-up modal every 10 levels
+    if (state.level % 10 === 1 && state.level > 1) {
+      showLevelUpModal(state.level - 1, state.level);
+    } else {
+      loadQuestion(state.level);
+    }
+  } else {
+    // Reached max level
+    alert('🎉 Luar biasa! Kamu telah menyelesaikan semua 999 level! Kamu adalah LEGENDA Pagaska!');
+    state.level = 1;
+    saveState();
+    loadQuestion(1);
+  }
+}
+
+// ═══════════════════════════════════════════
+// SUSUN KATA
+// ═══════════════════════════════════════════
+function renderSusunKata(soal) {
+  const area = document.getElementById('answer-area');
+  // soal.soal is like "O-D-T-R-E-K", jawaban is "DOKTER"
+  const letters = soal.soal.split('-');
+  susunChosen = [];
+
+  area.innerHTML = `
+    <div id="susun-area">
+      <div style="color:rgba(255,255,255,.5);font-size:12px;text-align:center;margin-bottom:6px;">
+        Tipe: <b style="color:var(--gold)">${soal.tipe || ''}</b> — Susun huruf jadi kata yang benar
+      </div>
+      <div class="susun-slots" id="susun-slots"></div>
+      <div class="letter-pool" id="letter-pool"></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn-gold" onclick="checkSusun()">✓ CEK</button>
+        <button class="btn-red" onclick="clearSusun()">↺ RESET</button>
+      </div>
+      <button class="btn-red" style="margin-top:6px" onclick="skipQuestion()">⏭ SKIP</button>
+    </div>
+  `;
+  renderSusunSlots(soal.jawaban.length);
+  renderLetterPool(letters);
+}
+
+function renderSusunSlots(count) {
+  const slots = document.getElementById('susun-slots');
+  slots.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'slot-cell';
+    cell.id = `slot-${i}`;
+    cell.textContent = susunChosen[i] || '';
+    cell.onclick = () => removeFromSlot(i);
+    slots.appendChild(cell);
+  }
+}
+
+function renderLetterPool(letters) {
+  const pool = document.getElementById('letter-pool');
+  pool.innerHTML = '';
+  letters.forEach((l, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'pool-btn';
+    btn.textContent = l;
+    btn.id = `pool-${i}`;
+    btn.disabled = susunChosen.some(c => c.poolIdx === i);
+    btn.onclick = () => addToSlot(l, i, btn);
+    pool.appendChild(btn);
+  });
+}
+
+function addToSlot(letter, poolIdx, btn) {
+  const jawaban = currentQ.soal.jawaban;
+  if (susunChosen.length >= jawaban.length) return;
+  susunChosen.push({ letter, poolIdx });
+  btn.disabled = true;
+  updateSusunSlots();
+}
+
+function removeFromSlot(slotIdx) {
+  if (slotIdx >= susunChosen.length) return;
+  const removed = susunChosen.splice(slotIdx, 1)[0];
+  const poolBtn = document.getElementById(`pool-${removed.poolIdx}`);
+  if (poolBtn) poolBtn.disabled = false;
+  updateSusunSlots();
+}
+
+function clearSusun() {
+  susunChosen = [];
+  document.querySelectorAll('.pool-btn').forEach(b => b.disabled = false);
+  updateSusunSlots();
+}
+
+function updateSusunSlots() {
+  const jawaban = currentQ.soal.jawaban;
+  for (let i = 0; i < jawaban.length; i++) {
+    const slot = document.getElementById(`slot-${i}`);
+    if (slot) slot.textContent = susunChosen[i] ? susunChosen[i].letter : '';
+  }
+}
+
+function checkSusun() {
+  const jawaban = currentQ.soal.jawaban;
+  if (susunChosen.length < jawaban.length) {
+    showFeedback(false, jawaban); return;
+  }
+  const formed = susunChosen.map(c => c.letter).join('');
+  const correct = formed.toUpperCase() === jawaban.toUpperCase();
+  showFeedback(correct, jawaban);
+  if (correct) onCorrect();
+}
+
+// ═══════════════════════════════════════════
+// FAMILY 100
+// ═══════════════════════════════════════════
+function renderFamily100(soal) {
+  const area = document.getElementById('answer-area');
+  f100Revealed = new Array(soal.jawaban.length).fill(false);
+  f100Tries = 0;
+
+  let slotsHtml = soal.jawaban.map((ans, i) =>
+    `<div class="f100-slot" id="f100-${i}">
+      <div class="rank">${i + 1}</div>
+      <div class="val" id="f100-val-${i}">???</div>
+    </div>`
+  ).join('');
+
+  area.innerHTML = `
+    <div id="f100-input-row">
+      <input class="ans-input" id="f100-input" placeholder="Tebak jawaban survei..." autocomplete="off" autocorrect="off">
+      <button onclick="checkF100()">JAWAB</button>
+    </div>
+    <div id="f100-answers">${slotsHtml}</div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn-gold" onclick="f100Done()">✓ SELESAI</button>
+      <button class="btn-red" onclick="skipQuestion()">⏭ SKIP</button>
+    </div>
+  `;
+  document.getElementById('f100-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkF100();
+  });
+}
+
+function checkF100() {
+  if (!currentQ) return;
+  const input = document.getElementById('f100-input');
+  const userAns = normalize(input.value.trim());
+  if (!userAns) return;
+  input.value = '';
+
+  const answers = currentQ.soal.jawaban;
+  let found = false;
+  answers.forEach((ans, i) => {
+    if (!f100Revealed[i] && normalize(ans) === userAns) {
+      f100Revealed[i] = true;
+      const slot = document.getElementById(`f100-${i}`);
+      const val = document.getElementById(`f100-val-${i}`);
+      slot.classList.add('revealed');
+      val.textContent = ans.toUpperCase();
+      found = true;
+    }
+  });
+
+  if (!found) {
+    f100Tries++;
+    if (f100Tries <= 3) {
+      const fb = document.getElementById('feedback');
+      fb.style.display = 'block'; fb.className = 'wrong';
+      fb.textContent = `❌ "${userAns}" tidak ada! (Salah ke-${f100Tries})`;
+    }
+    // Mark wrong slot visual
+  }
+
+  // Check if all revealed
+  if (f100Revealed.every(r => r)) {
+    onCorrect();
+  }
+}
+
+function f100Done() {
+  // Reveal all answers
+  if (!currentQ) return;
+  const answers = currentQ.soal.jawaban;
+  answers.forEach((ans, i) => {
+    const val = document.getElementById(`f100-val-${i}`);
+    if (val) val.textContent = ans.toUpperCase();
+    const slot = document.getElementById(`f100-${i}`);
+    if (slot && !f100Revealed[i]) slot.style.opacity = '.5';
+  });
+  const allCorrect = f100Revealed.every(r => r);
+  showFeedback(allCorrect, answers.join(', '));
+  if (allCorrect) onCorrect();
+  else setTimeout(nextLevel, 2000);
+}
+
+// ═══════════════════════════════════════════
+// LEVEL BAR
+// ═══════════════════════════════════════════
+const GAME_ORDER = ['asahotak','tebakkata','susunkata','tebakbendera','tebakkimia','tebakgambar','family100'];
+function getGameForLevel(lvl) {
+  return GAME_ORDER[(lvl - 1) % GAME_ORDER.length];
+}
+
+function updateLevelBar(level) {
+  state.level = level;
+  document.getElementById('lvl-label').textContent = `LEVEL ${level}`;
+  document.getElementById('lvl-xp').textContent = `${level} / 999`;
+  const pct = (level / 999) * 100;
+  document.getElementById('lvl-fill').style.width = Math.max(0.5, pct) + '%';
+  const game = getGameForLevel(level);
+  const meta = GAME_LABELS[game];
+  document.getElementById('lvl-game-tag').textContent = `${meta.icon} ${meta.name}`;
+  document.getElementById('streak-num').textContent = state.streak;
+}
+
+// ═══════════════════════════════════════════
+// CATEGORY FILTER
+// ═══════════════════════════════════════════
+function filterCat(cat) {
+  state.categoryFilter = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  loadQuestion(state.level);
+}
+
+// ═══════════════════════════════════════════
+// LEVEL UP MODAL
+// ═══════════════════════════════════════════
+function showLevelUpModal(oldLvl, newLvl) {
+  document.getElementById('modal-title').textContent = `🎉 LEVEL ${newLvl}!`;
+  document.getElementById('modal-sub').textContent = `Mantap, Ksatria! Kamu berhasil melewati level ${oldLvl}. Terus semangat!`;
+  document.getElementById('level-up-modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('level-up-modal').classList.remove('show');
+  loadQuestion(state.level);
+}
+
+// ═══════════════════════════════════════════
+// AI HINT
+// ═══════════════════════════════════════════
+async function requestHint() {
+  if (!currentQ) return;
+  const btn = document.getElementById('btn-ai');
+  btn.disabled = true; btn.textContent = 'Meminta hint dari Gemini...';
+  const { game, soal } = currentQ;
+  const jawaban = typeof soal.jawaban === 'string' ? soal.jawaban : soal.jawaban.join(', ');
+  const soalText = soal.soal || soal.img || '';
+  const url = `/api/game?action=hint&game=${encodeURIComponent(game)}&soal=${encodeURIComponent(soalText)}&jawaban=${encodeURIComponent(jawaban)}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    document.getElementById('ai-box').style.display = 'block';
+    document.getElementById('ai-text').textContent = data.text || 'Hint tidak tersedia.';
+  } catch {
+    document.getElementById('ai-text').textContent = 'Gagal mendapat hint.';
+    document.getElementById('ai-box').style.display = 'block';
+  }
+  btn.textContent = '🤖 Hint Sudah Diminta';
+}
+
+// ═══════════════════════════════════════════
+// MASCOT
+// ═══════════════════════════════════════════
+const MASCOT_PHRASES = [
+  ['Ksatria! Pantang menyerah! ⚔️', true],
+  ['Sudah sampai level berapa? 🐉', true],
+  ['Gunakan AI hint kalau bingung! 🤖', true],
+  ['Streak mu makin tinggi nih! 🔥', true],
+  ['Satu level lagi, MERDEKA! 💪', true],
+  ['Fokus, Ksatria! Kamu pasti bisa!', true],
+];
+let phraseIdx = 0, bubbleVisible = false;
+const bubble = document.getElementById('bubble');
+const mascot = document.getElementById('mascot');
+
+async function mascotClick() {
+  mascot.classList.remove('bounce');
+  void mascot.offsetWidth; mascot.classList.add('bounce');
+  if (!bubbleVisible) {
+    // First tap: AI greeting
+    if (phraseIdx === 0) {
+      bubble.textContent = 'Memuat sapaan...';
+      bubble.style.display = 'block'; bubbleVisible = true;
+      try {
+        const res = await fetch('/api/game?action=welcome1');
+        const d = await res.json();
+        bubble.textContent = d.text || MASCOT_PHRASES[0][0];
+      } catch {
+        bubble.textContent = MASCOT_PHRASES[0][0];
+      }
+      phraseIdx = 1;
+    } else {
+      const [text] = MASCOT_PHRASES[phraseIdx % MASCOT_PHRASES.length];
+      bubble.textContent = text; bubble.style.display = 'block'; bubbleVisible = true;
+      phraseIdx++;
+    }
+    setTimeout(() => { bubble.style.display = 'none'; bubbleVisible = false; }, 3000);
+  } else {
+    closeBubble();
+  }
+}
+function closeBubble() {
+  bubble.style.display = 'none'; bubbleVisible = false;
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+loadQuestion(state.level);
+
+// Auto mascot hello on first visit
+if (state.totalCorrect === 0) {
+  setTimeout(() => {
+    bubble.textContent = '⚔️ Selamat datang, Ksatria! Siap mulai Level 1?';
+    bubble.style.display = 'block'; bubbleVisible = true;
+    setTimeout(() => { bubble.style.display = 'none'; bubbleVisible = false; }, 4000);
+  }, 1200);
+}
+</script>
+</body>
+</html>
