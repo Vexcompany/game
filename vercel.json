@@ -1,8 +1,7 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/data/(.*)", "dest": "/data/$1" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/api/game", "destination": "/api/game.js" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
