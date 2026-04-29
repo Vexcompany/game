@@ -1,12 +1,15 @@
-import asahotak from '../data/asahotak.json' assert { type: 'json' };
-import family100 from '../data/family100.json' assert { type: 'json' };
-import susunkata from '../data/susunkata.json' assert { type: 'json' };
-import tebakgambar from '../data/tebakgambar.json' assert { type: 'json' };
-import tebakkata from '../data/tebakkata.json' assert { type: 'json' };
-import tebakbendera from '../data/tebakbendera.json' assert { type: 'json' };
-import tebakkimia from '../data/tebakkimia.json' assert { type: 'json' };
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
-export const config = { runtime: 'edge' };
+// Load JSON pakai fs — compatible dengan Vercel Node.js runtime
+const dataDir = join(process.cwd(), 'data');
+const asahotak     = JSON.parse(readFileSync(join(dataDir, 'asahotak.json'),     'utf-8'));
+const family100    = JSON.parse(readFileSync(join(dataDir, 'family100.json'),    'utf-8'));
+const susunkata    = JSON.parse(readFileSync(join(dataDir, 'susunkata.json'),    'utf-8'));
+const tebakgambar  = JSON.parse(readFileSync(join(dataDir, 'tebakgambar.json'), 'utf-8'));
+const tebakkata    = JSON.parse(readFileSync(join(dataDir, 'tebakkata.json'),    'utf-8'));
+const tebakbendera = JSON.parse(readFileSync(join(dataDir, 'tebakbendera.json'),'utf-8'));
+const tebakkimia   = JSON.parse(readFileSync(join(dataDir, 'tebakkimia.json'),  'utf-8'));
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
@@ -80,39 +83,31 @@ function getLevelInfo(level) {
   return { gameName, dataIndex, data: data[dataIndex], lvl };
 }
 
-export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
-  const action = searchParams.get('action');
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json',
-    'Cache-Control': 'public, max-age=300'
-  };
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
 
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers, status: 204 });
+    return res.status(204).end();
   }
+
+  const { action, level, game, soal, jawaban, prompt } = req.query;
 
   // ── GET SOAL BY LEVEL ──
   if (action === 'soal') {
-    const level = searchParams.get('level') || 1;
     const { gameName, dataIndex, data, lvl } = getLevelInfo(level);
-    return new Response(JSON.stringify({
-      level: lvl,
-      game: gameName,
-      dataIndex,
-      soal: data
-    }), { headers });
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.json({ level: lvl, game: gameName, dataIndex, soal: data });
   }
 
   // ── MASCOT GREETINGS ──
   if (action === 'welcome1') {
     const text = await callGemini(
       'Kamu adalah Kak Taksaka, maskot naga gagah dari Paskibra Pagaska. ' +
-      'Sapa pemain baru dengan gaya komandan seperti di Clash of Clans: ' +
-      'heroik, bersemangat, dramatis. Panggil mereka "Ksatria". Maksimal 18 kata. Bahasa Indonesia.'
+      'Sapa pemain baru dengan gaya komandan seperti di Clash of Clans: heroik, bersemangat, dramatis. ' +
+      'Panggil mereka "Ksatria". Maksimal 18 kata. Bahasa Indonesia.'
     );
-    return new Response(JSON.stringify({ text }), { headers });
+    return res.json({ text });
   }
 
   if (action === 'welcome2') {
@@ -120,46 +115,30 @@ export default async function handler(req) {
       'Kamu Kak Taksaka maskot naga. Beritahu pemain ada 7 kategori game seru ' +
       'dengan 999 level yang menanti. Gaya perang, penuh semangat. Maksimal 20 kata. Bahasa Indonesia.'
     );
-    return new Response(JSON.stringify({ text }), { headers });
+    return res.json({ text });
   }
 
   // ── AI HINT ──
   if (action === 'hint') {
-    const game = searchParams.get('game') || '';
-    const soal = searchParams.get('soal') || '';
-    const jawaban = searchParams.get('jawaban') || '';
-
     const prompts = {
-      asahotak: `Soal teka-teki: "${soal}". Jawaban: "${jawaban}". Berikan 1 hint/petunjuk dalam bahasa Indonesia tanpa menyebutkan jawabannya langsung. Singkat, max 2 kalimat.`,
-      tebakkata: `Daftar kata petunjuk: "${soal}". Jawaban: "${jawaban}". Berikan 1 clue tambahan dalam bahasa Indonesia tanpa menyebut jawabannya. Singkat.`,
-      susunkata: `Huruf acak: "${soal}". Jawaban: "${jawaban}". Berikan 1 hint tentang arti kata tanpa menyebut jawabannya. Bahasa Indonesia, singkat.`,
-      tebakbendera: `Bendera emoji: "${soal}". Jawaban negara: "${jawaban}". Berikan 1 hint tentang negara tsb (letak, ibu kota, atau fakta unik) tanpa menyebut namanya. Bahasa Indonesia.`,
-      tebakkimia: `Nama unsur: "${soal}". Simbol kimia: "${jawaban}". Berikan 1 fakta menarik tentang unsur ini dalam bahasa Indonesia. Singkat.`,
-      tebakgambar: `Soal tebak gambar. Deskripsi: "${soal}". Jawaban: "${jawaban}". Berikan 1 petunjuk tanpa menyebut jawabannya. Bahasa Indonesia.`,
-      family100: `Soal survey Family 100: "${soal}". Beberapa jawaban populer tersembunyi. Berikan 1 petunjuk strategi menjawab. Bahasa Indonesia, singkat.`,
+      asahotak:     `Soal teka-teki: "${soal}". Jawaban: "${jawaban}". Berikan 1 hint dalam bahasa Indonesia tanpa menyebut jawabannya. Max 2 kalimat.`,
+      tebakkata:    `Kata petunjuk: "${soal}". Jawaban: "${jawaban}". Berikan 1 clue tambahan tanpa menyebut jawabannya. Bahasa Indonesia, singkat.`,
+      susunkata:    `Huruf acak: "${soal}". Jawaban: "${jawaban}". Hint tentang arti kata tanpa menyebut jawabannya. Bahasa Indonesia.`,
+      tebakbendera: `Bendera: "${soal}". Negara: "${jawaban}". Hint tentang negara (letak/ibu kota/fakta unik) tanpa menyebut namanya. Bahasa Indonesia.`,
+      tebakkimia:   `Unsur: "${soal}". Simbol: "${jawaban}". 1 fakta menarik tentang unsur ini. Bahasa Indonesia, singkat.`,
+      tebakgambar:  `Deskripsi gambar: "${soal}". Jawaban: "${jawaban}". 1 petunjuk tanpa menyebut jawabannya. Bahasa Indonesia.`,
+      family100:    `Soal Family 100: "${soal}". Berikan 1 petunjuk strategi menjawab. Bahasa Indonesia, singkat.`,
     };
-
-    const prompt = prompts[game] || `Soal: "${soal}". Berikan 1 petunjuk dalam bahasa Indonesia.`;
-    const text = await callGemini(prompt);
-    return new Response(JSON.stringify({ text }), { headers });
+    const p = prompts[game] || `Soal: "${soal}". Petunjuk dalam bahasa Indonesia.`;
+    const text = await callGemini(p);
+    return res.json({ text });
   }
 
   // ── GENERIC GEMINI ──
   if (action === 'gemini') {
-    const prompt = searchParams.get('prompt') || '';
-    const text = await callGemini(prompt);
-    return new Response(JSON.stringify({ text }), { headers });
+    const text = await callGemini(prompt || '');
+    return res.json({ text });
   }
 
-  // ── GET LEVEL INFO (for progress bar) ──
-  if (action === 'levelinfo') {
-    const result = [];
-    for (let i = 1; i <= 999; i++) {
-      const { gameName, lvl } = getLevelInfo(i);
-      result.push({ level: lvl, game: gameName });
-    }
-    return new Response(JSON.stringify(result), { headers });
-  }
-
-  return new Response(JSON.stringify({ error: 'Action tidak dikenali' }), { headers, status: 400 });
+  return res.status(400).json({ error: 'Action tidak dikenali' });
 }
